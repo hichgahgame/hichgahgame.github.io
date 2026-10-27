@@ -9,6 +9,11 @@
   <meta property="og:description" content="Calm, thoughtful games that teach, delight and help you grow, with room to breathe.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://hichgahgame.github.io/">
+  <meta property="og:image" content="https://hichgahgame.github.io/brand/logo/png/hichgah-app-icon-1024.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#7B3FFF">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Lilita+One&display=swap" rel="stylesheet">
@@ -18,7 +23,12 @@
 <body class="home">
 <main>
   <header class="topbar">
-    <p class="logo">Hichgah</p>
+    <a class="lockup" href="./" aria-label="Hichgah home">
+      <picture>
+        <source srcset="brand/logo/hichgah-logo-white.svg" media="(prefers-color-scheme: dark)">
+        <img src="brand/logo/hichgah-logo.svg" alt="Hichgah" width="173" height="44">
+      </picture>
+    </a>
     <nav aria-label="Sections">
       <a href="#approach">Our approach</a>
       <a href="#ages">By age</a>
@@ -57,15 +67,15 @@
           <line class="tick" x1="83.4" y1="120" x2="90.3" y2="124" stroke-width="2.5"/>
           <line class="tick" x1="120" y1="83.4" x2="124" y2="90.3" stroke-width="2.5"/>
         </g>
-        <circle cx="170" cy="170" r="5" fill="var(--accent)" fill-opacity="0.5"/>
+        <circle cx="170" cy="170" r="5" fill="#fff"/>
         <g class="orbit">
-          <circle cx="170" cy="10" r="9" fill="var(--sun)"/>
-          <circle cx="330" cy="170" r="7" fill="var(--leaf)"/>
-          <circle cx="57" cy="283" r="8" fill="var(--rose)"/>
+          <circle cx="170" cy="10" r="9" fill="var(--hg-sun)"/>
+          <circle cx="330" cy="170" r="7" fill="var(--hg-leaf)"/>
+          <circle cx="57" cy="283" r="8" fill="var(--hg-pink)"/>
         </g>
         <g class="orbit slow">
-          <circle cx="269" cy="71" r="6" fill="var(--sky)"/>
-          <circle cx="30" cy="170" r="6" fill="var(--peach)"/>
+          <circle cx="269" cy="71" r="6" fill="var(--hg-sky)"/>
+          <circle cx="30" cy="170" r="6" fill="var(--hg-coral)"/>
         </g>
       </svg>
       <figcaption>A clock with no hands.</figcaption>
@@ -89,11 +99,11 @@
     <p class="intro">Entertainment and education are not opposites. The best play teaches quietly, and the best
       learning feels like play. We design for both, with a little space left over for you.</p>
     <ul class="pillars">
-      <li style="--c: var(--sun)"><div class="dot" aria-hidden="true">✦</div><h3>Play</h3><p>Joy comes first: bright worlds, friendly characters and the delight of getting it right.</p></li>
-      <li style="--c: var(--sky)"><div class="dot" aria-hidden="true">◆</div><h3>Learn</h3><p>Real thinking and real knowledge: logic, patterns, timing, and how to care for an animal.</p></li>
-      <li style="--c: var(--leaf)"><div class="dot" aria-hidden="true">❦</div><h3>Grow</h3><p>Patience, focus and trying again: skills that matter long after the game is closed.</p></li>
-      <li style="--c: var(--peach)"><div class="dot" aria-hidden="true">◐</div><h3>Reflect</h3><p>Room to pause and notice: what worked, what to try next, and how it felt.</p></li>
-      <li style="--c: var(--rose)"><div class="dot" aria-hidden="true">○</div><h3>Be present</h3><p>No daily streaks to protect and no notifications calling you back. The moment is enough.</p></li>
+      <li style="--c: var(--hg-sun)"><div class="dot" aria-hidden="true">✦</div><h3>Play</h3><p>Joy comes first: bright worlds, friendly characters and the delight of getting it right.</p></li>
+      <li style="--c: var(--hg-sky)"><div class="dot" aria-hidden="true">◆</div><h3>Learn</h3><p>Real thinking and real knowledge: logic, patterns, timing, and how to care for an animal.</p></li>
+      <li style="--c: var(--hg-leaf)"><div class="dot" aria-hidden="true">❦</div><h3>Grow</h3><p>Patience, focus and trying again: skills that matter long after the game is closed.</p></li>
+      <li style="--c: var(--hg-coral)"><div class="dot" aria-hidden="true">◐</div><h3>Reflect</h3><p>Room to pause and notice: what worked, what to try next, and how it felt.</p></li>
+      <li style="--c: var(--hg-pink)"><div class="dot" aria-hidden="true">○</div><h3>Be present</h3><p>No daily streaks to protect and no notifications calling you back. The moment is enough.</p></li>
     </ul>
   </section>
 
@@ -103,13 +113,13 @@
     <p class="intro">Each game is shaped for the age that plays it: how it is controlled, how fast it moves, and what it
       asks of the player.</p>
     <div class="ages">
-      <div class="age">
+      <div class="age" style="--c: var(--hg-sky)">
         <p class="range">5 to 8</p>
         <h3>Little explorers</h3>
         <p>One-finger controls, guides that wait for you, and challenges that grow at a gentle pace.</p>
         <div class="tags"><a href="cookie-jump-and-duck/">Cookie Jump &amp; Duck</a></div>
       </div>
-      <div class="age">
+      <div class="age" style="--c: var(--hg-pink)">
         <p class="range">6 to 12</p>
         <h3>Curious minds</h3>
         <p>Puzzles to think through, worlds to collect, and real-world knowledge to bring home.</p>

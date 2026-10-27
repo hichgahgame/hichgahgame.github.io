@@ -1,31 +1,5 @@
-/* The Hichgah home page. Builds on style.css: a calm dawn palette, a soft serif for reflective
-   headlines, and a clock with no hands as the brand symbol. */
-:root {
-  --dawn-1: #f7f3ff;
-  --dawn-2: #ffe9dc;
-  --ink-soft: #4d4466;
-  --peach: #ff9f7a;
-  --sky: #8fb8ff;
-  --leaf: #5fbf8f;
-  --sun: #ffc94d;
-  --rose: #f06fa4;
-  --serif: "Fraunces", Georgia, "Times New Roman", serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --dawn-1: #1b1530;
-    --dawn-2: #2b1d3a;
-    --ink-soft: #cfc6ea;
-  }
-}
-
-:root[data-theme="dark"] {
-  --dawn-1: #1b1530;
-  --dawn-2: #2b1d3a;
-  --ink-soft: #cfc6ea;
-}
-
+/* The Hichgah home page. Builds on style.css and the brand tokens (brand/tokens.css): vivid dusk
+   panels, a soft serif for reflective headlines, and a clock with no hands. */
 body.home { background: var(--bg); }
 body.home main { max-width: 1040px; padding-top: 20px; }
 
@@ -38,7 +12,7 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   margin: 0 0 10px;
 }
 
-.serif { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; }
+.serif { font-family: var(--hg-font-serif); font-weight: 500; letter-spacing: -0.01em; }
 
 /* Top bar */
 .topbar {
@@ -48,7 +22,8 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   gap: 16px;
   padding: 4px 0 8px;
 }
-.topbar .logo { font-size: 1.9rem; }
+.topbar .lockup { display: block; height: 44px; }
+.topbar .lockup img { height: 100%; width: auto; display: block; }
 .topbar nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95rem; }
 .topbar nav a { color: var(--muted); text-decoration: none; }
 .topbar nav a:hover { color: var(--accent); }
@@ -63,19 +38,25 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   margin: 18px -16px 0;
   padding: 56px 40px;
   border-radius: 32px;
-  background: linear-gradient(160deg, var(--dawn-1) 0%, var(--dawn-2) 100%);
-  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(255, 210, 63, 0.55), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(31, 181, 255, 0.35), transparent 45%),
+    var(--hg-gradient-dusk);
+  color: #fff;
   overflow: hidden;
+  box-shadow: 0 24px 60px -24px rgba(90, 31, 224, 0.55);
 }
+.home-hero .eyebrow { color: var(--hg-sun); }
 .home-hero h1 {
-  font-family: var(--serif);
+  font-family: var(--hg-font-serif);
   font-weight: 500;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   line-height: 1.08;
   margin: 0 0 18px;
 }
-.home-hero h1 em { font-style: italic; color: var(--accent); }
-.home-hero .lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 34em; margin: 0 0 26px; }
+.home-hero h1 { color: #fff; }
+.home-hero h1 em { font-style: italic; color: var(--hg-sun); }
+.home-hero .lede { font-size: 1.12rem; color: rgba(255, 255, 255, 0.92); max-width: 34em; margin: 0 0 26px; }
 
 .actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .button {
@@ -89,20 +70,24 @@ body.home main { max-width: 1040px; padding-top: 20px; }
 .button.primary { background: var(--accent); color: #fff; }
 .button.ghost { color: var(--accent); background: transparent; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .button.primary { color: #1b1530; }
+  :root:not([data-theme="light"]) .button.primary { color: var(--hg-night); }
 }
-:root[data-theme="dark"] .button.primary { color: #1b1530; }
+:root[data-theme="dark"] .button.primary { color: var(--hg-night); }
+.home-hero .button.primary, .closing .button.primary { background: #fff; border-color: #fff; color: var(--hg-violet-deep); }
+.home-hero .button.ghost, .closing .button.ghost { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+.button { transition: transform var(--hg-motion-base) ease; }
+.button:hover { transform: translateY(-2px); }
 
 /* The clock with no hands: rings that breathe slowly, and moments drifting around them. */
 .timeless { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1; margin: 0 auto; }
 .timeless svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.timeless .ring { fill: none; stroke: var(--accent); stroke-opacity: 0.22; }
-.timeless .face { fill: var(--surface); stroke: var(--line); }
-.timeless .tick { stroke: var(--muted); stroke-opacity: 0.35; stroke-linecap: round; }
+.timeless .ring { fill: none; stroke: #fff; stroke-opacity: 0.35; }
+.timeless .face { fill: rgba(255, 255, 255, 0.12); stroke: rgba(255, 255, 255, 0.45); }
+.timeless .tick { stroke: #fff; stroke-opacity: 0.6; stroke-linecap: round; }
 .timeless .breath { transform-origin: 170px 170px; animation: breathe 9s ease-in-out infinite; }
 .timeless .orbit { transform-origin: 170px 170px; animation: drift 60s linear infinite; }
 .timeless .orbit.slow { animation-duration: 95s; animation-direction: reverse; }
-.timeless figcaption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 6px; font-style: italic; }
+.timeless figcaption { text-align: center; font-size: 0.85rem; color: rgba(255, 255, 255, 0.85); margin-top: 6px; font-style: italic; }
 
 @keyframes breathe { 0%, 100% { transform: scale(0.96); opacity: 0.7; } 50% { transform: scale(1.04); opacity: 1; } }
 @keyframes drift { to { transform: rotate(360deg); } }
@@ -116,13 +101,17 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   margin: 64px 0 0;
 }
 .name-story .word {
-  font-family: var(--serif);
+  font-family: var(--hg-font-serif);
   font-size: clamp(2.6rem, 7vw, 4.2rem);
-  line-height: 1;
-  color: var(--accent);
+  line-height: 1.2;
+  width: fit-content;
+  background: var(--hg-gradient-now);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   direction: rtl;
 }
-.name-story p { margin: 0 0 10px; color: var(--ink-soft); }
+.name-story p { margin: 0 0 10px; color: var(--text-soft); }
 .name-story .parts { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
 .name-story .parts span {
   background: var(--accent-soft);
@@ -135,13 +124,13 @@ body.home main { max-width: 1040px; padding-top: 20px; }
 /* Section headings */
 .section { margin-top: 80px; }
 .section > h2 {
-  font-family: var(--serif);
+  font-family: var(--hg-font-serif);
   font-weight: 500;
   font-size: clamp(1.7rem, 3.6vw, 2.3rem);
   line-height: 1.15;
   margin: 0 0 10px;
 }
-.section > .intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 24px; }
+.section > .intro { color: var(--text-soft); max-width: 40em; margin: 0 0 24px; }
 
 /* Pillars */
 .pillars {
@@ -164,15 +153,15 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 5px;
+  height: 6px;
   background: var(--c);
 }
 .pillars .dot {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c) 22%, transparent);
-  color: var(--c);
+  background: var(--c);
+  color: #fff;
   display: grid;
   place-items: center;
   font-size: 1.15rem;
@@ -190,11 +179,12 @@ body.home main { max-width: 1040px; padding-top: 20px; }
 .age {
   border-radius: 20px;
   padding: 22px;
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--c, var(--accent)) 16%, var(--surface));
+  border-top: 6px solid var(--c, var(--accent));
 }
-.age .range { font-family: var(--serif); font-size: 1.7rem; line-height: 1; margin: 0 0 4px; }
+.age .range { font-family: var(--hg-font-serif); font-size: 1.7rem; line-height: 1; margin: 0 0 4px; }
 .age h3 { margin: 0 0 8px; font-size: 1.05rem; }
-.age p { margin: 0 0 12px; font-size: 0.95rem; color: var(--ink-soft); }
+.age p { margin: 0 0 12px; font-size: 0.95rem; color: var(--text-soft); }
 .age .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .age .tags a, .age .tags span {
   font-size: 0.85rem;
@@ -296,16 +286,19 @@ body.home main { max-width: 1040px; padding-top: 20px; }
   padding: 56px 32px;
   border-radius: 32px;
   text-align: center;
-  background: linear-gradient(200deg, var(--dawn-1), var(--dawn-2));
-  border: 1px solid var(--line);
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 210, 63, 0.45), transparent 50%),
+    var(--hg-gradient-dusk);
 }
 .closing h2 {
-  font-family: var(--serif);
+  font-family: var(--hg-font-serif);
   font-weight: 500;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   margin: 0 0 12px;
+  color: #fff;
 }
-.closing p { color: var(--ink-soft); max-width: 32em; margin: 0 auto 22px; }
+.closing p { color: rgba(255, 255, 255, 0.92); max-width: 32em; margin: 0 auto 22px; }
 
 @media (max-width: 900px) {
   .pillars { grid-template-columns: repeat(2, 1fr); }

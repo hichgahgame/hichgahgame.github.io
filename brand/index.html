@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hichgah Brand</title>
+  <meta name="description" content="The Hichgah brand: logo, colours, type, shape and motion, shared by the website and every game.">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <meta name="theme-color" content="#7B3FFF">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Lilita+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../home.css">
+  <style>
+    .logos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .logos figure { margin: 0; border: 1px solid var(--line); border-radius: var(--hg-radius-lg); overflow: hidden; background: var(--surface); }
+    .logos .stage { height: 170px; display: grid; place-items: center; padding: 24px; }
+    .logos .stage img { max-width: 100%; max-height: 100%; }
+    .logos .stage.light { background: var(--hg-paper); }
+    .logos .stage.dark { background: var(--hg-night); }
+    .logos .stage.vivid { background: var(--hg-gradient-dusk); }
+    .logos figcaption { padding: 12px 16px; font-size: 0.9rem; color: var(--muted); }
+    .hues { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+    .hue { border-radius: var(--hg-radius-md); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+    .hue .chip { height: 34px; display: flex; align-items: end; padding: 0 10px 4px; font-size: 0.72rem; font-family: ui-monospace, Menlo, monospace; }
+    .hue .chip.base { height: 76px; font-size: 0.8rem; }
+    .hue h3 { margin: 0; padding: 10px 12px; font-size: 0.95rem; text-transform: capitalize; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border: 1px solid var(--line); border-radius: var(--hg-radius-pill); background: var(--surface); font-size: 0.9rem; }
+    .pill i { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.08); }
+    .pill code { color: var(--muted); font-size: 0.8rem; }
+    .bar { height: 64px; border-radius: var(--hg-radius-lg); margin: 0 0 8px; }
+    .type p { margin: 0 0 14px; }
+    .type .display { font-family: var(--hg-font-display); font-size: 2.6rem; line-height: 1.1; color: var(--accent); }
+    .type .serif { font-family: var(--hg-font-serif); font-size: 2rem; line-height: 1.2; }
+    .type small { display: block; color: var(--muted); font-size: 0.85rem; }
+    pre { background: var(--hg-night); color: var(--hg-night-text); border-radius: var(--hg-radius-md); padding: 18px 20px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55; }
+    .dos li { margin: 0 0 6px; }
+  </style>
+</head>
+<body class="home">
+<main>
+  <header class="topbar">
+    <a class="lockup" href="../" aria-label="Hichgah home">
+      <picture>
+        <source srcset="logo/hichgah-logo-white.svg" media="(prefers-color-scheme: dark)">
+        <img src="logo/hichgah-logo.svg" alt="Hichgah" width="173" height="44">
+      </picture>
+    </a>
+    <nav aria-label="Sections"><a href="#logo">Logo</a><a href="#colour">Colour</a><a href="#type">Type</a><a href="#unity">In Unity</a></nav>
+  </header>
+
+  <section class="section" style="margin-top:40px">
+    <p class="eyebrow">Brand</p>
+    <h2>One look, from the website to every game</h2>
+    <p class="intro">Everything here comes from one file, <code>brand/tokens.json</code>. The website reads it as CSS and
+      every game reads it as C#, so a star, a button or the logo looks the same wherever you meet it.</p>
+  </section>
+
+  <section class="section" id="logo">
+    <p class="eyebrow">Logo</p>
+    <h2>The circle of time, opened by a single moment</h2>
+    <p class="intro">The ring is the clock, left open. The dot is the Now, stepping out of it. Use the full lockup when there
+      is room, and the mark on its own for icons, splash screens and small spaces.</p>
+    <div class="logos">
+      <figure><div class="stage light"><img src="logo/hichgah-logo.svg" alt="Hichgah logo, dark lettering"></div><figcaption>On light · <a href="logo/hichgah-logo.svg">SVG</a> · <a href="logo/png/hichgah-logo-2048.png">PNG</a></figcaption></figure>
+      <figure><div class="stage dark"><img src="logo/hichgah-logo-white.svg" alt="Hichgah logo, white lettering"></div><figcaption>On dark or colour · <a href="logo/hichgah-logo-white.svg">SVG</a> · <a href="logo/png/hichgah-logo-white-2048.png">PNG</a></figcaption></figure>
+      <figure><div class="stage light"><img src="logo/hichgah-mark.svg" alt="Hichgah mark" width="110" height="110"></div><figcaption>Mark · <a href="logo/hichgah-mark.svg">SVG</a> · <a href="logo/png/hichgah-mark-1024.png">PNG</a></figcaption></figure>
+      <figure><div class="stage vivid"><img src="logo/hichgah-app-icon.svg" alt="Hichgah app icon" width="110" height="110" style="border-radius:24px"></div><figcaption>App icon · <a href="logo/hichgah-app-icon.svg">SVG</a> · <a href="logo/png/hichgah-app-icon-1024.png">PNG</a></figcaption></figure>
+    </div>
+    <ul class="dos">
+      <li>Leave clear space around the logo at least the size of the dot's ring gap.</li>
+      <li>Keep the mark at 16px or larger, and the lockup at 96px wide or larger.</li>
+      <li>Don't recolour, stretch, rotate or add effects. On busy art, use the white lockup or the app icon.</li>
+    </ul>
+  </section>
+
+  <section class="section" id="colour">
+    <p class="eyebrow">Colour</p>
+    <h2>Vivid, warm and never harsh</h2>
+    <p class="intro">Each hue has four shades: <strong>base</strong> for fills, <strong>deep</strong> for edges and text on
+      light, <strong>soft</strong> for light panels and <strong>night</strong> for accents on dark. Every text pairing
+      passes WCAG AA, checked each time the tokens are built.</p>
+    <div class="hues" id="hues"></div>
+    <h3 style="margin:28px 0 10px">Gradients</h3>
+    <div id="gradients"></div>
+    <h3 style="margin:28px 0 10px">Shared game meanings</h3>
+    <p class="muted" style="margin-top:0">A star is always sun, a reward always tangerine, in every game.</p>
+    <div class="row" id="game"></div>
+    <h3 style="margin:28px 0 10px">Neutrals</h3>
+    <div class="row" id="neutral"></div>
+    <noscript><p>The swatches need JavaScript; the values are in <a href="tokens.json">tokens.json</a>.</p></noscript>
+  </section>
+
+  <section class="section type" id="type">
+    <p class="eyebrow">Type</p>
+    <h2>Playful titles, calm words</h2>
+    <p class="display">Play · Learn · Grow<small>Lilita One: logo, titles, buttons, numbers in games</small></p>
+    <p class="serif"><em>Enjoy the moment</em> you're in.<small>Fraunces: reflective headlines on the web</small></p>
+    <p>System UI for everything you read at length.<small>Body text: the platform's own font. Games use the localised fonts they ship.</small></p>
+  </section>
+
+  <section class="section" id="unity">
+    <p class="eyebrow">In Unity</p>
+    <h2>The same tokens, as C#</h2>
+    <p class="intro">Run <code>brand/sync-unity.sh</code> from this repo to copy <code>Assets/Hichgah/Brand/</code> (the
+      <code>HichgahBrand.cs</code> class and the logo PNGs) into every game. Change colours in <code>tokens.json</code>,
+      run <code>brand/build.py</code>, then sync again.</p>
+<pre>using Hichgah.Brand;
+
+starImage.color   = HichgahColors.Game.Star;          // sun
+button.color      = HichgahColors.Game.PrimaryButton;  // violet
+buttonEdge.color  = HichgahColors.Violet.Deep;
+panel.color       = HichgahColors.Pink.Soft;
+splash.colorGradient = HichgahGradients.Now;            // violet → pink → tangerine
+
+yield return Fade(panel, HichgahMotion.Calm);          // 0.6 s; Fast (0.15 s) only for taps</pre>
+  </section>
+
+  <footer><a href="../">Hichgah</a> · © 2026 Hichgah</footer>
+</main>
+<script>
+  // Swatches are drawn from tokens.json itself, so this page can never drift from the source.
+  fetch("tokens.json").then(r => r.json()).then(t => {
+    const ink = hex => {
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.55 ? "#1D1440" : "#FFFFFF";
+    };
+    const resolve = ref => ref.startsWith("#") ? ref : ref.includes(".") ? t.palette[ref.split(".")[0]][ref.split(".")[1]] : t.neutral[ref];
+    const el = (tag, attrs = {}, kids = []) => {
+      const n = Object.assign(document.createElement(tag), attrs);
+      n.append(...kids);
+      return n;
+    };
+
+    const hues = document.getElementById("hues");
+    for (const [name, shades] of Object.entries(t.palette)) {
+      const card = el("div", { className: "hue" });
+      for (const shade of ["base", "deep", "soft", "night"]) {
+        const v = shades[shade];
+        const chip = el("div", { className: "chip " + shade, textContent: `${shade} ${v}` });
+        chip.style.background = v; chip.style.color = ink(v);
+        card.append(chip);
+      }
+      card.append(el("h3", { textContent: name }));
+      hues.append(card);
+    }
+    const grads = document.getElementById("gradients");
+    for (const [name, stops] of Object.entries(t.gradient)) {
+      if (name.startsWith("$")) continue;
+      const bar = el("div", { className: "bar" });
+      bar.style.background = `linear-gradient(135deg, ${stops.join(", ")})`;
+      grads.append(bar, el("p", { className: "muted", textContent: `${name}: ${stops.join(" → ")}` }));
+    }
+    const pill = (label, v) => {
+      const dot = el("i"); dot.style.background = v;
+      return el("span", { className: "pill" }, [dot, label + " ", el("code", { textContent: v })]);
+    };
+    const game = document.getElementById("game");
+    for (const [name, ref] of Object.entries(t.game)) if (!name.startsWith("$")) game.append(pill(name, resolve(ref)));
+    const neutral = document.getElementById("neutral");
+    for (const [name, v] of Object.entries(t.neutral)) neutral.append(pill(name, v));
+  }).catch(() => {
+    document.getElementById("hues").textContent = "Couldn't load tokens.json.";
+  });
+</script>
+</body>
+</html>

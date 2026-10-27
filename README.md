@@ -4,8 +4,10 @@ The public Hichgah website, served by GitHub Pages from `main` at https://hichga
 Push to `main` and the change is live in about a minute.
 
 ```
-index.html                 studio home page: lists every game
-style.css                  shared styles (all pages link it)
+index.html                 studio home page (home.css): approach, ages, games, promises
+style.css                  shared styles (all pages link it); imports brand/tokens.css
+favicon.svg, favicon-32.png, apple-touch-icon.png   the Hichgah mark in browser tabs and on home screens
+brand/                     the brand kit: tokens, logo, guide page → https://hichgahgame.github.io/brand/
 app-ads.txt                AdMob seller line, shared by every game (one per developer website)
 motion.js                  pauses the autoplaying gameplay videos for visitors who prefer reduced motion
 <game>/index.html          the game's page      → https://hichgahgame.github.io/<game>/
@@ -22,6 +24,22 @@ Keep each video under about 3 MB.
 
 Use the game's repo name, lowercase, for `<game>` (for example `wonderlings`, `dogify`,
 `cookie-jump-and-duck`). Once a store listing uses one of these URLs, it must never change.
+
+## Brand
+
+`brand/tokens.json` is the single source of the Hichgah look: colours (each hue has base, deep,
+soft and night shades), gradients, shared game meanings (star, reward, success, ...), fonts, radii,
+spacing and motion. Change it there, never in the generated files, then:
+
+```sh
+python3 brand/build.py        # checks text contrast (WCAG AA), writes brand/tokens.css and the Unity C#
+brand/render-logo.sh          # only after changing a logo SVG: PNGs, favicons, game copies
+brand/sync-unity.sh           # copies Assets/Hichgah/Brand/ into every game beside this repo
+```
+
+Games use `Hichgah.Brand` (`HichgahColors.Game.Star`, `HichgahGradients.Now`, `HichgahMotion.Calm`, ...)
+and the logo PNGs in `Assets/Hichgah/Brand/Logo/`. Each game keeps its own world colours; the
+brand covers what should feel the same everywhere: the logo, stars, rewards, buttons, motion.
 
 ## Adding a game
 
