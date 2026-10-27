@@ -1,0 +1,33 @@
+/* Wonderlings: the game's night-purple sky, cream text, gold stars and orange buttons (UiTheme.cs).
+   The game itself is always at night, so the page is dark in both colour schemes. */
+:root, :root[data-theme="light"], :root[data-theme="dark"] {
+  --bg: #29246a;
+  --surface: #3b2e7a;
+  --text: #fff5dc;
+  --muted: #d6d0f5;
+  --accent: #ffd84d;
+  --accent-soft: #4a3a92;
+  --line: #5a4aa3;
+  --good: #52cf66;
+  --frame: #17133d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #29246a;
+    --surface: #3b2e7a;
+    --text: #fff5dc;
+    --muted: #d6d0f5;
+    --accent: #ffd84d;
+    --accent-soft: #4a3a92;
+    --line: #5a4aa3;
+    --good: #52cf66;
+  }
+}
+
+body {
+  background: linear-gradient(180deg, #29246a 0%, #6b4ab0 100%) fixed;
+  background-color: #29246a;
+}
+
+.logo { color: #ffd84d; text-shadow: 0 3px 0 #ff9e42; }

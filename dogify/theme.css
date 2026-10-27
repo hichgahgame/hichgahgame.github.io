@@ -1,0 +1,48 @@
+/* Dogify: the game's warm card cream and cocoa-brown ink (BreedCardView.cs), with a biscuit-orange
+   accent. Dark mode is a cosy evening brown. */
+:root {
+  --bg: #fdf6ec;
+  --surface: #fffcf7;
+  --text: #33291f;
+  --muted: #6b5d52;
+  --accent: #b4572a;
+  --accent-soft: #f6e4cf;
+  --line: #ead9c4;
+  --good: #2e9a4c;
+  --frame: #33291f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1812;
+    --surface: #2b2219;
+    --text: #f7ecdf;
+    --muted: #cdb9a5;
+    --accent: #f0a46e;
+    --accent-soft: #3a2d21;
+    --line: #463627;
+    --good: #7fd6a2;
+    --frame: #0f0b08;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1f1812;
+  --surface: #2b2219;
+  --text: #f7ecdf;
+  --muted: #cdb9a5;
+  --accent: #f0a46e;
+  --accent-soft: #3a2d21;
+  --line: #463627;
+  --good: #7fd6a2;
+  --frame: #0f0b08;
+}
+
+/* Soft paw-print dots, like the bubbles behind the dogs in the game. */
+body {
+  background:
+    radial-gradient(circle at 20% 15%, var(--accent-soft) 0 60px, transparent 61px),
+    radial-gradient(circle at 85% 40%, var(--accent-soft) 0 90px, transparent 91px),
+    var(--bg);
+  background-attachment: fixed;
+}

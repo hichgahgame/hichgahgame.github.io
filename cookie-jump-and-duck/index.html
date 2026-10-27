@@ -9,27 +9,57 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="theme.css">
 </head>
 <body>
 <main>
   <nav class="crumbs"><a href="../">Hichgah</a> › Cookie Jump &amp; Duck</nav>
-  <header class="brand">
-    <p class="logo">Cookie Jump &amp; Duck</p>
+  <header class="hero">
+    <img class="icon" src="media/icon.png" alt="Cookie Jump &amp; Duck app icon">
+    <div>
+      <p class="logo">Cookie Jump &amp; Duck</p>
+      <h1>Tap to jump, hold to duck</h1>
+    </div>
   </header>
-  <h1>Tap to jump, hold to duck</h1>
-  <p>Cookie Jump &amp; Duck is the first game in <strong>Cookie's Little Adventures</strong>, a series of gentle games
-    for children aged 5 to 12 starring Cookie, a white-and-caramel cartoon puppy. Cookie stands on a giant cookie
-    while candy bars sweep around: tap to jump over the low ones, press and hold to duck under the high ones.</p>
 
-  <div class="card summary">
-    <ul>
-      <li>Levels with stars, plus an endless mode that speeds up the longer you last</li>
-      <li>A friendly tutorial that waits for the right move, and forgiving near misses</li>
-      <li>Earn treats by playing and dress Cookie up in outfits</li>
-      <li>No accounts or purchases; optional, child-safe reward videos never interrupt play</li>
-      <li>8 languages</li>
-    </ul>
+  <section class="play">
+    <div class="phone">
+      <video src="media/gameplay.mp4" poster="media/poster.jpg" autoplay muted loop playsinline preload="metadata"
+        aria-label="Gameplay video: Cookie jumps and ducks past candy bars, then tries on heart glasses in the closet"></video>
+    </div>
+    <div>
+      <p>Cookie Jump &amp; Duck is the first game in <strong>Cookie's Little Adventures</strong>, a series of gentle games
+        for children aged 5 to 12 starring Cookie, a white-and-caramel cartoon puppy. Cookie stands on a giant cookie
+        while candy bars sweep around: tap to jump over the low ones, press and hold to duck under the high ones.</p>
+      <div class="card summary">
+        <ul>
+          <li>30 levels in 3 worlds with stars, plus an endless mode that speeds up the longer you last</li>
+          <li>A friendly tutorial that waits for the right move, and forgiving near misses</li>
+          <li>Earn treats by playing and dress Cookie up in 24 outfits</li>
+          <li>No accounts or purchases; optional, child-safe reward videos never interrupt play</li>
+          <li>8 languages</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <h2>A look inside</h2>
+  <div class="shots">
+    <figure><img src="media/1_jump.jpg" alt="Cookie jumping over a red-and-white candy bar" loading="lazy" width="540" height="960"><figcaption>Jump the low bars</figcaption></figure>
+    <figure><img src="media/3_map.jpg" alt="The adventure map in Cookie Kitchen with stars on finished levels" loading="lazy" width="540" height="960"><figcaption>Follow the adventure</figcaption></figure>
+    <figure><img src="media/4_level_complete.jpg" alt="Level complete with three stars and treats earned" loading="lazy" width="540" height="960"><figcaption>Earn stars and treats</figcaption></figure>
+    <figure><img src="media/5_closet.jpg" alt="Cookie trying on heart glasses in the closet" loading="lazy" width="540" height="960"><figcaption>Dress up Cookie</figcaption></figure>
   </div>
+
+  <h2>Skills kids practise</h2>
+  <ul class="skills">
+    <li><span class="emoji" aria-hidden="true">⏱️</span><strong>Timing and rhythm</strong><p>Perfect dodges come from moving at just the right moment as the bars sweep past.</p></li>
+    <li><span class="emoji" aria-hidden="true">👀</span><strong>Hand-eye coordination</strong><p>Kids watch the bar, read whether it is high or low, and answer with one finger.</p></li>
+    <li><span class="emoji" aria-hidden="true">✋</span><strong>Wait, then act</strong><p>Tapping and holding are two different moves, so kids learn to pause and choose instead of tapping on impulse.</p></li>
+    <li><span class="emoji" aria-hidden="true">🎯</span><strong>Focus</strong><p>The bars speed up the longer you last, and each level has its own goal to keep in mind.</p></li>
+    <li><span class="emoji" aria-hidden="true">💪</span><strong>Trying again</strong><p>Three hearts per level and a quick restart make a bump part of learning, not the end.</p></li>
+    <li><span class="emoji" aria-hidden="true">🦴</span><strong>Saving up</strong><p>Treats are earned by playing and spent in the closet, a first taste of saving for something you want.</p></li>
+  </ul>
 
   <h2>Privacy</h2>
   <p>Cookie Jump &amp; Duck collects no personal information. Optional reward videos come from Google AdMob, set up for children. Read the full <a href="privacy/">privacy policy</a>.</p>
@@ -41,5 +71,6 @@
     <a href="../">Hichgah</a> · © 2026 Hichgah
   </footer>
 </main>
+<script src="../motion.js"></script>
 </body>
 </html>

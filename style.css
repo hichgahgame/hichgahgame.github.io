@@ -134,3 +134,96 @@ ul.games {
 .card.game h3 { font-size: 1.2rem; margin: 0 0 6px; }
 .card.game p { margin: 0 0 10px; }
 .card.game .links { margin: 0; font-size: 0.95rem; }
+
+/* Game pages: hero, gameplay video, screenshot strip and skills. Each game's theme.css sets the colours. */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 8px 0 20px;
+}
+
+.hero img.icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  flex: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.hero .logo { margin-bottom: 4px; }
+.hero h1 { margin: 0; }
+
+.play {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: center;
+  margin: 28px 0;
+}
+
+.phone {
+  border-radius: 28px;
+  padding: 8px;
+  background: var(--frame, #1d1733);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.phone video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 21px;
+  background: var(--surface);
+}
+
+.shots {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 14px;
+  margin: 0 -2px;
+}
+
+.shots figure { margin: 0; flex: none; scroll-snap-align: start; }
+
+.shots img {
+  display: block;
+  width: 180px;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+}
+
+.shots figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 6px; text-align: center; }
+
+.skills {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.skills li {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.skills .emoji { font-size: 1.6rem; line-height: 1; display: block; margin-bottom: 8px; }
+.skills strong { display: block; margin-bottom: 4px; }
+.skills p { margin: 0; font-size: 0.95rem; color: var(--muted); }
+
+@media (max-width: 620px) {
+  .play { grid-template-columns: 1fr; }
+  .phone { max-width: 280px; margin: 0 auto; }
+  .hero img.icon { width: 72px; height: 72px; border-radius: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shots { scroll-behavior: auto; }
+}

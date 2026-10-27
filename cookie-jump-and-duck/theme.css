@@ -1,0 +1,48 @@
+/* Cookie Jump & Duck: the candy-pink sunburst of the app icon (BrandingBuilder.cs), white sticker
+   cards and strawberry-pink text. Dark mode is a deep berry night. */
+:root {
+  --bg: #fff0f6;
+  --surface: #ffffff;
+  --text: #3d1a2b;
+  --muted: #7d4d63;
+  --accent: #d6457f;
+  --accent-soft: #ffd9e8;
+  --line: #f6c6da;
+  --good: #2e9b57;
+  --frame: #d6457f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #2a1220;
+    --surface: #3a1a2d;
+    --text: #ffeef5;
+    --muted: #e3b4c8;
+    --accent: #ff8ab8;
+    --accent-soft: #4d2139;
+    --line: #5c2a45;
+    --good: #7fd6a2;
+    --frame: #12060d;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #2a1220;
+  --surface: #3a1a2d;
+  --text: #ffeef5;
+  --muted: #e3b4c8;
+  --accent: #ff8ab8;
+  --accent-soft: #4d2139;
+  --line: #5c2a45;
+  --good: #7fd6a2;
+  --frame: #12060d;
+}
+
+body {
+  background:
+    repeating-conic-gradient(from 0deg at 50% -10%, transparent 0deg 11.25deg, color-mix(in srgb, var(--accent) 7%, transparent) 11.25deg 22.5deg),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+.logo { color: var(--accent); }
