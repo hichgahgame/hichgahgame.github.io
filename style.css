@@ -1,0 +1,136 @@
+:root {
+  --bg: #f7f3ff;
+  --surface: #ffffff;
+  --text: #2b2340;
+  --muted: #6a6188;
+  --accent: #7b4fd6;
+  --accent-soft: #ece4ff;
+  --line: #e2daf5;
+  --good: #2e8b57;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1530;
+    --surface: #251d40;
+    --text: #f1ecff;
+    --muted: #b9afd9;
+    --accent: #b99cff;
+    --accent-soft: #33295a;
+    --line: #3a3063;
+    --good: #7fd6a2;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1b1530;
+  --surface: #251d40;
+  --text: #f1ecff;
+  --muted: #b9afd9;
+  --accent: #b99cff;
+  --accent-soft: #33295a;
+  --line: #3a3063;
+  --good: #7fd6a2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+header.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.logo {
+  font-family: "Lilita One", system-ui, sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--accent);
+  margin: 0;
+}
+
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: 1.25rem; margin: 36px 0 8px; }
+p, li { color: var(--text); }
+.muted { color: var(--muted); }
+a { color: var(--accent); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin: 20px 0;
+}
+
+.summary {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.summary ul { margin: 8px 0 0; padding-left: 1.2em; }
+.summary li::marker { color: var(--good); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+th { color: var(--muted); font-weight: 600; }
+
+footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .logo { font-size: 2rem; }
+  h1 { font-size: 1.6rem; }
+  th, td { padding: 8px 4px; }
+}
+
+nav.crumbs {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+ul.games {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card.game { margin: 0; }
+.card.game h3 { font-size: 1.2rem; margin: 0 0 6px; }
+.card.game p { margin: 0 0 10px; }
+.card.game .links { margin: 0; font-size: 0.95rem; }
