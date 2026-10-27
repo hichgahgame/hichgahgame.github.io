@@ -1,0 +1,331 @@
+/* The Hichgah home page. Builds on style.css: a calm dawn palette, a soft serif for reflective
+   headlines, and a clock with no hands as the brand symbol. */
+:root {
+  --dawn-1: #f7f3ff;
+  --dawn-2: #ffe9dc;
+  --ink-soft: #4d4466;
+  --peach: #ff9f7a;
+  --sky: #8fb8ff;
+  --leaf: #5fbf8f;
+  --sun: #ffc94d;
+  --rose: #f06fa4;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --dawn-1: #1b1530;
+    --dawn-2: #2b1d3a;
+    --ink-soft: #cfc6ea;
+  }
+}
+
+:root[data-theme="dark"] {
+  --dawn-1: #1b1530;
+  --dawn-2: #2b1d3a;
+  --ink-soft: #cfc6ea;
+}
+
+body.home { background: var(--bg); }
+body.home main { max-width: 1040px; padding-top: 20px; }
+
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.serif { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; }
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+.topbar .logo { font-size: 1.9rem; }
+.topbar nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95rem; }
+.topbar nav a { color: var(--muted); text-decoration: none; }
+.topbar nav a:hover { color: var(--accent); }
+
+/* Hero */
+.home-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 32px;
+  align-items: center;
+  margin: 18px -16px 0;
+  padding: 56px 40px;
+  border-radius: 32px;
+  background: linear-gradient(160deg, var(--dawn-1) 0%, var(--dawn-2) 100%);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.home-hero h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.08;
+  margin: 0 0 18px;
+}
+.home-hero h1 em { font-style: italic; color: var(--accent); }
+.home-hero .lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 34em; margin: 0 0 26px; }
+
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.button {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--accent);
+}
+.button.primary { background: var(--accent); color: #fff; }
+.button.ghost { color: var(--accent); background: transparent; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .button.primary { color: #1b1530; }
+}
+:root[data-theme="dark"] .button.primary { color: #1b1530; }
+
+/* The clock with no hands: rings that breathe slowly, and moments drifting around them. */
+.timeless { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1; margin: 0 auto; }
+.timeless svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.timeless .ring { fill: none; stroke: var(--accent); stroke-opacity: 0.22; }
+.timeless .face { fill: var(--surface); stroke: var(--line); }
+.timeless .tick { stroke: var(--muted); stroke-opacity: 0.35; stroke-linecap: round; }
+.timeless .breath { transform-origin: 170px 170px; animation: breathe 9s ease-in-out infinite; }
+.timeless .orbit { transform-origin: 170px 170px; animation: drift 60s linear infinite; }
+.timeless .orbit.slow { animation-duration: 95s; animation-direction: reverse; }
+.timeless figcaption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 6px; font-style: italic; }
+
+@keyframes breathe { 0%, 100% { transform: scale(0.96); opacity: 0.7; } 50% { transform: scale(1.04); opacity: 1; } }
+@keyframes drift { to { transform: rotate(360deg); } }
+
+/* Name story */
+.name-story {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: center;
+  margin: 64px 0 0;
+}
+.name-story .word {
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  line-height: 1;
+  color: var(--accent);
+  direction: rtl;
+}
+.name-story p { margin: 0 0 10px; color: var(--ink-soft); }
+.name-story .parts { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.name-story .parts span {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+/* Section headings */
+.section { margin-top: 80px; }
+.section > h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+.section > .intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 24px; }
+
+/* Pillars */
+.pillars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+.pillars li {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px 18px 22px;
+  position: relative;
+  overflow: hidden;
+}
+.pillars li::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--c);
+}
+.pillars .dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+  color: var(--c);
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+}
+.pillars h3 { font-size: 1.1rem; margin: 0 0 6px; }
+.pillars p { margin: 0; font-size: 0.93rem; color: var(--muted); }
+
+/* Ages */
+.ages {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.age {
+  border-radius: 20px;
+  padding: 22px;
+  background: var(--accent-soft);
+}
+.age .range { font-family: var(--serif); font-size: 1.7rem; line-height: 1; margin: 0 0 4px; }
+.age h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.age p { margin: 0 0 12px; font-size: 0.95rem; color: var(--ink-soft); }
+.age .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.age .tags a, .age .tags span {
+  font-size: 0.85rem;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--text);
+}
+
+/* Game cards */
+.game-cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.game-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+}
+.game-card .art {
+  height: 150px;
+  display: grid;
+  place-items: center;
+  background: var(--g);
+}
+.game-card .art img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22); }
+.game-card .art .badge {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+.game-card .body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 1; }
+.game-card h3 { margin: 0 0 2px; font-size: 1.2rem; }
+.game-card h3 a { color: var(--text); text-decoration: none; }
+.game-card .meta { font-size: 0.85rem; color: var(--muted); margin: 0 0 10px; }
+.game-card p { margin: 0 0 12px; font-size: 0.95rem; }
+.game-card .skills-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+.game-card .skills-tags span {
+  font-size: 0.8rem;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.game-card .links { margin-top: auto; font-size: 0.92rem; }
+.status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-left: 6px;
+  vertical-align: 2px;
+}
+
+/* Promises */
+.promises {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 28px;
+}
+.promises li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.promises .check {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--good) 18%, transparent);
+  color: var(--good);
+  font-weight: 700;
+}
+.promises strong { display: block; margin-bottom: 2px; }
+.promises p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+/* Closing */
+.closing {
+  margin: 88px -16px 0;
+  padding: 56px 32px;
+  border-radius: 32px;
+  text-align: center;
+  background: linear-gradient(200deg, var(--dawn-1), var(--dawn-2));
+  border: 1px solid var(--line);
+}
+.closing h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin: 0 0 12px;
+}
+.closing p { color: var(--ink-soft); max-width: 32em; margin: 0 auto 22px; }
+
+@media (max-width: 900px) {
+  .pillars { grid-template-columns: repeat(2, 1fr); }
+  .pillars li:last-child { grid-column: 1 / -1; }
+  .game-cards, .ages { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .home-hero { grid-template-columns: 1fr; padding: 36px 22px; margin: 12px 0 0; }
+  .timeless { max-width: 220px; order: -1; }
+  .name-story { grid-template-columns: 1fr; gap: 12px; }
+  .promises { grid-template-columns: 1fr; }
+  .closing { margin: 64px 0 0; padding: 40px 22px; }
+  .topbar nav { display: none; }
+}
+
+@media (max-width: 520px) {
+  .pillars { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeless .breath, .timeless .orbit { animation: none; }
+}

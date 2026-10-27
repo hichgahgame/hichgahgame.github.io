@@ -3,44 +3,183 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hichgah Games</title>
-  <meta name="description" content="Hichgah makes gentle, child-safe games for children.">
+  <title>Hichgah</title>
+  <meta name="description" content="Hichgah makes calm, thoughtful games that teach, delight and help you grow: a place outside the clock to enjoy the moment.">
+  <meta property="og:title" content="Hichgah: play outside the clock">
+  <meta property="og:description" content="Calm, thoughtful games that teach, delight and help you grow, with room to breathe.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hichgahgame.github.io/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Lilita+One&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="home.css">
 </head>
-<body>
+<body class="home">
 <main>
-  <header class="brand">
+  <header class="topbar">
     <p class="logo">Hichgah</p>
+    <nav aria-label="Sections">
+      <a href="#approach">Our approach</a>
+      <a href="#ages">By age</a>
+      <a href="#games">Games</a>
+      <a href="#promises">Our promises</a>
+    </nav>
   </header>
-  <h1>Gentle games for curious kids</h1>
 
-  <h2>Our games</h2>
-  <!-- One card per game. Add a game: see README.md. -->
-  <ul class="games">
-    <li class="card game">
-      <h3><a href="wonderlings/">Wonderlings</a></h3>
-      <p>A color-sorting puzzle game: mix magic ingredients and discover creatures. For ages 6 to 12.</p>
-      <p class="links"><a href="wonderlings/">About the game</a> · <a href="wonderlings/privacy/">Privacy policy</a></p>
-    </li>
-    <li class="card game">
-      <h3><a href="cookie-jump-and-duck/">Cookie Jump &amp; Duck</a></h3>
-      <p>Help Cookie the puppy jump and duck past sweeping candy bars. For ages 5 to 12.</p>
-      <p class="links"><a href="cookie-jump-and-duck/">About the game</a> · <a href="cookie-jump-and-duck/privacy/">Privacy policy</a></p>
-    </li>
-    <li class="card game">
-      <h3><a href="dogify/">Dogify</a></h3>
-      <p>Meet dog breeds in 3D, learn their care and collect their cards. For ages 6 to 12. <span class="muted">Coming soon.</span></p>
-      <p class="links"><a href="dogify/">About the game</a> · <a href="dogify/privacy/">Privacy policy</a></p>
-    </li>
-  </ul>
+  <section class="home-hero">
+    <div>
+      <p class="eyebrow">Play · Learn · Grow</p>
+      <h1>Step outside the clock. <em>Enjoy the moment</em> you're in.</h1>
+      <p class="lede">Hichgah makes calm, thoughtful games that teach, delight and leave room to breathe.
+        No rush and no pressure: just the joy of this moment, and a little more of who you are becoming.</p>
+      <div class="actions">
+        <a class="button primary" href="#games">Explore our games</a>
+        <a class="button ghost" href="#promises">Our promises</a>
+      </div>
+    </div>
+    <figure class="timeless">
+      <svg viewBox="0 0 340 340" role="img" aria-label="A clock face with no hands, surrounded by slowly drifting colored dots">
+        <circle class="ring breath" cx="170" cy="170" r="160" stroke-width="2"/>
+        <circle class="ring breath" cx="170" cy="170" r="140" stroke-width="1.5" style="animation-delay:-3s"/>
+        <circle class="face" cx="170" cy="170" r="112" stroke-width="2"/>
+        <g class="ticks">
+          <line class="tick" x1="170" y1="70" x2="170" y2="84" stroke-width="4"/>
+          <line class="tick" x1="270" y1="170" x2="256" y2="170" stroke-width="4"/>
+          <line class="tick" x1="170" y1="270" x2="170" y2="256" stroke-width="4"/>
+          <line class="tick" x1="70" y1="170" x2="84" y2="170" stroke-width="4"/>
+          <line class="tick" x1="220" y1="83.4" x2="216" y2="90.3" stroke-width="2.5"/>
+          <line class="tick" x1="256.6" y1="120" x2="249.7" y2="124" stroke-width="2.5"/>
+          <line class="tick" x1="256.6" y1="220" x2="249.7" y2="216" stroke-width="2.5"/>
+          <line class="tick" x1="220" y1="256.6" x2="216" y2="249.7" stroke-width="2.5"/>
+          <line class="tick" x1="120" y1="256.6" x2="124" y2="249.7" stroke-width="2.5"/>
+          <line class="tick" x1="83.4" y1="220" x2="90.3" y2="216" stroke-width="2.5"/>
+          <line class="tick" x1="83.4" y1="120" x2="90.3" y2="124" stroke-width="2.5"/>
+          <line class="tick" x1="120" y1="83.4" x2="124" y2="90.3" stroke-width="2.5"/>
+        </g>
+        <circle cx="170" cy="170" r="5" fill="var(--accent)" fill-opacity="0.5"/>
+        <g class="orbit">
+          <circle cx="170" cy="10" r="9" fill="var(--sun)"/>
+          <circle cx="330" cy="170" r="7" fill="var(--leaf)"/>
+          <circle cx="57" cy="283" r="8" fill="var(--rose)"/>
+        </g>
+        <g class="orbit slow">
+          <circle cx="269" cy="71" r="6" fill="var(--sky)"/>
+          <circle cx="30" cy="170" r="6" fill="var(--peach)"/>
+        </g>
+      </svg>
+      <figcaption>A clock with no hands.</figcaption>
+    </figure>
+  </section>
 
-  <h2>Contact</h2>
-  <p><a href="mailto:hichgah.game@gmail.com">hichgah.game@gmail.com</a></p>
+  <section class="name-story" aria-labelledby="name-title">
+    <div class="word" lang="fa" aria-hidden="true">هیچگاه</div>
+    <div>
+      <p class="eyebrow" id="name-title">Why "Hichgah"</p>
+      <div class="parts"><span><strong>hich</strong> · nothing</span><span><strong>gah</strong> · moment</span></div>
+      <p><em>Hichgah</em> is the moment of nothingness: the Now, this very second, before the next thing rushes in.
+        A Hichgah game is a small place inside that second, where minutes stop counting and attention comes home to
+        what is right in front of you: the puzzle in your hands, the friend at your side, the breath before the jump.</p>
+    </div>
+  </section>
 
-  <footer>© 2026 Hichgah</footer>
+  <section class="section" id="approach">
+    <p class="eyebrow">Our approach</p>
+    <h2>Five things every Hichgah game is made of</h2>
+    <p class="intro">Entertainment and education are not opposites. The best play teaches quietly, and the best
+      learning feels like play. We design for both, with a little space left over for you.</p>
+    <ul class="pillars">
+      <li style="--c: var(--sun)"><div class="dot" aria-hidden="true">✦</div><h3>Play</h3><p>Joy comes first: bright worlds, friendly characters and the delight of getting it right.</p></li>
+      <li style="--c: var(--sky)"><div class="dot" aria-hidden="true">◆</div><h3>Learn</h3><p>Real thinking and real knowledge: logic, patterns, timing, and how to care for an animal.</p></li>
+      <li style="--c: var(--leaf)"><div class="dot" aria-hidden="true">❦</div><h3>Grow</h3><p>Patience, focus and trying again: skills that matter long after the game is closed.</p></li>
+      <li style="--c: var(--peach)"><div class="dot" aria-hidden="true">◐</div><h3>Reflect</h3><p>Room to pause and notice: what worked, what to try next, and how it felt.</p></li>
+      <li style="--c: var(--rose)"><div class="dot" aria-hidden="true">○</div><h3>Be present</h3><p>No daily streaks to protect and no notifications calling you back. The moment is enough.</p></li>
+    </ul>
+  </section>
+
+  <section class="section" id="ages">
+    <p class="eyebrow">By age</p>
+    <h2>Growing up with us, one stage at a time</h2>
+    <p class="intro">Each game is shaped for the age that plays it: how it is controlled, how fast it moves, and what it
+      asks of the player.</p>
+    <div class="ages">
+      <div class="age">
+        <p class="range">5 to 8</p>
+        <h3>Little explorers</h3>
+        <p>One-finger controls, guides that wait for you, and challenges that grow at a gentle pace.</p>
+        <div class="tags"><a href="cookie-jump-and-duck/">Cookie Jump &amp; Duck</a></div>
+      </div>
+      <div class="age">
+        <p class="range">6 to 12</p>
+        <h3>Curious minds</h3>
+        <p>Puzzles to think through, worlds to collect, and real-world knowledge to bring home.</p>
+        <div class="tags"><a href="wonderlings/">Wonderlings</a><a href="cookie-jump-and-duck/">Cookie Jump &amp; Duck</a><a href="dogify/">Dogify</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="games">
+    <p class="eyebrow">Our games</p>
+    <h2>Small worlds to get lost in, in the best way</h2>
+    <!-- One card per game. Add a game: see README.md. -->
+    <ul class="game-cards">
+      <li class="game-card">
+        <div class="art" style="--g: linear-gradient(180deg, #29246a, #6b4ab0)"><img src="wonderlings/media/icon.png" alt="" width="96" height="96"></div>
+        <div class="body">
+          <h3><a href="wonderlings/">Wonderlings</a></h3>
+          <p class="meta">Puzzle · Ages 6 to 12 · 16 languages</p>
+          <p>Sort magic colors, mix ingredients and discover six friendly creatures for your garden.</p>
+          <div class="skills-tags"><span>Logic</span><span>Planning</span><span>Patience</span></div>
+          <p class="links"><a href="wonderlings/">Discover the game</a> · <a href="wonderlings/privacy/">Privacy</a></p>
+        </div>
+      </li>
+      <li class="game-card">
+        <div class="art" style="--g: repeating-conic-gradient(from 0deg at 50% 50%, #ffb8d1 0deg 11.25deg, #fa85b3 11.25deg 22.5deg)"><img src="cookie-jump-and-duck/media/icon.png" alt="" width="96" height="96"></div>
+        <div class="body">
+          <h3><a href="cookie-jump-and-duck/">Cookie Jump &amp; Duck</a></h3>
+          <p class="meta">Action · Ages 5 to 12 · 8 languages</p>
+          <p>Help Cookie the puppy jump and duck past sweeping candy bars, then dress up for the next adventure.</p>
+          <div class="skills-tags"><span>Timing</span><span>Focus</span><span>Trying again</span></div>
+          <p class="links"><a href="cookie-jump-and-duck/">Discover the game</a> · <a href="cookie-jump-and-duck/privacy/">Privacy</a></p>
+        </div>
+      </li>
+      <li class="game-card">
+        <div class="art" style="--g: linear-gradient(180deg, #fdf6ec, #f6e4cf)"><div class="badge" aria-hidden="true">🐶</div></div>
+        <div class="body">
+          <h3><a href="dogify/">Dogify</a> <span class="status">SOON</span></h3>
+          <p class="meta">Learning · Ages 6 to 12 · 3 languages</p>
+          <p>Meet dog breeds in 3D, learn how to care for them and collect a card for every breed.</p>
+          <div class="skills-tags"><span>Animal care</span><span>Empathy</span><span>Reading</span></div>
+          <p class="links"><a href="dogify/">Discover the game</a> · <a href="dogify/privacy/">Privacy</a></p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section" id="promises">
+    <p class="eyebrow">Our promises</p>
+    <h2>How we make games, and what we will never do</h2>
+    <p class="intro">Time spent with a Hichgah game should feel well spent. These promises hold for every game we make.</p>
+    <ul class="promises">
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Calm by design</strong><p>A gentle pace, forgiving mistakes, and no daily streaks or notifications pulling you back.</p></div></li>
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Safe for children</strong><p>No accounts, no chat with strangers and no in-app purchases.</p></div></li>
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Private</strong><p>We collect no personal information, and our games play offline.</p></div></li>
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Ads only by choice</strong><p>Where a game offers reward videos, they are optional, set up for children and never interrupt play.</p></div></li>
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Made for everyone</strong><p>Color-blind symbols, helper arrows, calmer speeds and right-to-left languages, so more children can play.</p></div></li>
+      <li><span class="check" aria-hidden="true">✓</span><div><strong>Honest about learning</strong><p>We say which skills a game practises, and we never promise more than play can give.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="closing">
+    <h2>Take a moment. It's yours.</h2>
+    <p>Pick a game, put the clock away, and enjoy being exactly where you are.</p>
+    <div class="actions" style="justify-content:center">
+      <a class="button primary" href="#games">Choose a game</a>
+      <a class="button ghost" href="mailto:hichgah.game@gmail.com">Say hello</a>
+    </div>
+  </section>
+
+  <footer>© 2026 Hichgah · <a href="mailto:hichgah.game@gmail.com">hichgah.game@gmail.com</a></footer>
 </main>
 </body>
 </html>
