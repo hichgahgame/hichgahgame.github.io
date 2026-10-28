@@ -160,7 +160,11 @@ ul.games {
 .shots img {
   display: block;
   width: 180px;
+  /* The width and height attributes reserve space while loading; without this, height="960" wins
+     and the screenshot is stretched to 180x960. */
+  height: auto;
   aspect-ratio: 9 / 16;
+  object-fit: cover;
   border-radius: 16px;
   border: 1px solid var(--line);
 }
