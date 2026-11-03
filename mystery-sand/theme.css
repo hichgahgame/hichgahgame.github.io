@@ -46,3 +46,5 @@ body {
     var(--bg);
   background-attachment: fixed;
 }
+
+.logo { color: var(--accent); }
