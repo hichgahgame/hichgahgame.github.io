@@ -1,0 +1,48 @@
+/* Mystery Sand: the game's warm sand cream with toasted-sand ink (SandPalette), and a soft sand accent.
+   Dark mode is sand at dusk. */
+:root {
+  --bg: #fbf1dc;
+  --surface: #fffaf0;
+  --text: #2b2216;
+  --muted: #66563f;
+  --accent: #8c4c10;
+  --accent-soft: #f6e2b8;
+  --line: #ead7b0;
+  --good: #2e9a4c;
+  --frame: #2b2216;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1e1912;
+    --surface: #2a2219;
+    --text: #f8eedd;
+    --muted: #d3c2a6;
+    --accent: #f2b766;
+    --accent-soft: #3b2f20;
+    --line: #4a3b28;
+    --good: #7fd6a2;
+    --frame: #0f0c08;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1e1912;
+  --surface: #2a2219;
+  --text: #f8eedd;
+  --muted: #d3c2a6;
+  --accent: #f2b766;
+  --accent-soft: #3b2f20;
+  --line: #4a3b28;
+  --good: #7fd6a2;
+  --frame: #0f0c08;
+}
+
+/* Soft sand ripples, like grooves drawn in the game's sand. */
+body {
+  background:
+    radial-gradient(circle at 18% 12%, var(--accent-soft) 0 70px, transparent 71px),
+    radial-gradient(circle at 88% 42%, var(--accent-soft) 0 100px, transparent 101px),
+    var(--bg);
+  background-attachment: fixed;
+}
