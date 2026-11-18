@@ -322,3 +322,33 @@ body.home main { max-width: 1040px; padding-top: 20px; }
 @media (prefers-reduced-motion: reduce) {
   .timeless .breath, .timeless .orbit { animation: none; }
 }
+
+/* Callout to the Farsi initiative (farsi/) */
+.farsi-callout .callout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 24px 28px;
+  border-radius: 24px;
+  background: var(--accent-soft);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform var(--hg-motion-base) ease;
+}
+.farsi-callout .callout:hover { transform: translateY(-2px); }
+.farsi-callout .word {
+  font-family: "Vazirmatn", var(--hg-font-body);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.4;
+  background: var(--hg-gradient-now);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.farsi-callout .eyebrow { display: block; margin-bottom: 4px; }
+.farsi-callout strong { display: block; font-size: 1.15rem; margin-bottom: 4px; }
+.farsi-callout .sub { display: block; color: var(--text-soft); font-size: 0.95rem; }
+@media (max-width: 720px) { .farsi-callout .callout { grid-template-columns: 1fr; gap: 6px; } }
+@media (prefers-reduced-motion: reduce) { .farsi-callout .callout { transition: none; } }
