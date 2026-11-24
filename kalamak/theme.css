@@ -1,0 +1,51 @@
+/* Kalamak: the app's cream paper and violet ink (the icon's speech bubble on violet), with the
+   tangerine of its vowel mark and the sun of its dot. Dark mode is violet night. */
+:root {
+  --bg: #FFF8EC;
+  --surface: #FFFDF8;
+  --text: #1D1440;
+  --text-soft: #3F3566;
+  --muted: #5F5587;
+  --accent: #5A1FE0;
+  --accent-soft: #EEE6FF;
+  --line: #EADFCB;
+  --good: #0F7A41;
+  --frame: #1D1440;
+  --tile: #FFFFFF;
+  --mark: #A85A00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #120B29;
+    --surface: #1E1640;
+    --text: #F6F2FF;
+    --text-soft: #DCD3F5;
+    --muted: #BDB3DF;
+    --accent: #B69BFF;
+    --accent-soft: #2A1F57;
+    --line: #33286A;
+    --good: #6FE3A0;
+    --frame: #0A0618;
+    --tile: #261C4F;
+    --mark: #FFC066;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #120B29;
+  --surface: #1E1640;
+  --text: #F6F2FF;
+  --text-soft: #DCD3F5;
+  --muted: #BDB3DF;
+  --accent: #B69BFF;
+  --accent-soft: #2A1F57;
+  --line: #33286A;
+  --good: #6FE3A0;
+  --frame: #0A0618;
+  --tile: #261C4F;
+  --mark: #FFC066;
+}
+
+body { background: var(--bg); }
+.logo { color: var(--accent); }

@@ -10,6 +10,8 @@ favicon.svg, favicon-32.png, apple-touch-icon.png   the Hichgah mark in browser 
 brand/                     the brand kit: tokens, logo, guide page → https://hichgahgame.github.io/brand/
 app-ads.txt                AdMob seller line, shared by every game (one per developer website)
 motion.js                  pauses the autoplaying gameplay videos for visitors who prefer reduced motion
+farsi/                     الفبای خانه (Alefba-ye Khaneh), the Farsi initiative's landing page (Farsi, RTL)
+kalamak/                   Kalamak, the initiative's first app (Flutter); page, kalamak.css, privacy
 <game>/index.html          the game's page      → https://hichgahgame.github.io/<game>/
 <game>/theme.css           the game's colours (light and dark), used by its page and privacy policy
 <game>/media/              icon (256px), 4 screenshots (540x960 JPEG), gameplay.mp4 + poster.jpg
