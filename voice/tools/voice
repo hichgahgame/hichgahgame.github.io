@@ -1,0 +1,7 @@
+#!/bin/sh
+# Runs voice_pack.py in its own venv (made on first use; needs Python 3.14 and the cryptography package).
+HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ ! -x "$HERE/.venv/bin/python" ]; then
+  python3.14 -m venv "$HERE/.venv" && "$HERE/.venv/bin/pip" -q install cryptography || exit 1
+fi
+exec "$HERE/.venv/bin/python" "$HERE/voice_pack.py" "$@"

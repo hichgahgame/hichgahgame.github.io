@@ -1,1 +1,4 @@
 .DS_Store
+voice/tools/.venv/
+voice/tools/__pycache__/
+voice/packs/.labels.json
