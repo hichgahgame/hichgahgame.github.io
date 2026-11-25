@@ -35,6 +35,20 @@ pack: `make ../kalamak ../mystery-sand`. Without `--new-password` it asks for on
 characters) or reads `$VOICE_PACK_PASSWORD`. Making a pack again with the same password replaces it,
 and the person's recordings so far are kept.
 
+**Long lists:** the page cuts each group into parts of about 20 lines (a script can set `partSize`).
+"Continue" opens the next unfinished part at its first unrecorded line. Each part ends with "Next part /
+Send / Take a break", and a break screen sums up the session. Sending only includes recordings that are
+new since the last send (re-recorded lines count as new); "Send everything again" is the fallback. Each
+send is numbered (`…-send3.zip`). A batch over 15 MB is split (`…-send4-1of3.zip`), and every file imports
+on its own. `voice import` takes any number of zips, or a folder of them, and keeps the newest take of
+each line.
+
+**A voice actor with their own studio** doesn't need the page: `voice export . --group words` writes
+`lines.csv` (opens in Excel) and `lines.md`, with one file name per line (`fa/word_core_cat.wav`) and
+the recording specs; `--chunk 50` cuts it into `partNN-lines.csv/.md`. When the files come back, run `voice import <folder> --project .`. Files are named
+`<lang>/<id>.<ext>`, or `<id>.<ext>` with `--lang`, in any format `afconvert` reads (WAV, M4A, MP3, AIFF,
+FLAC). Stereo is mixed down.
+
 **Other commands:** `show <pack>` (decrypt and list), `list` (the packs here, with who they are for, from
 the local `.labels.json`), `remove <name>` (then push to take it offline).
 
@@ -76,3 +90,13 @@ The app writes a script, `tool/<app>.voice.json` (or under `Tools/`), from its o
   - Each file keeps its indent, key order and final newline.
 
 Kalamak's script comes from `kalamak/tool/voice_script.dart`.
+
+## Tests
+
+`voice/tests/run.sh` runs the tool's tests (`voice/tools/test_voice_pack.py`: filters, packs, trimming,
+import from zips and folders, newest take, JSON style, export) and the page logic's tests
+(`voice/tests/core.test.mjs`, Node: parts, batches, times, WAV, zip; a pack made by Python opens here, and
+a zip made here opens in Python). `voice/tests/run.sh --e2e [shots-folder]` also runs the page in headless
+Chrome with a fake microphone (`voice/tests/e2e.mjs`): a throwaway app and pack, every screen a voice person
+sees, sending, reloading, then `voice import`. Run it after changing the page or the tool. The page's pure
+logic lives in `voice/core.js`, so it can be tested; keep new logic there.

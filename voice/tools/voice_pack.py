@@ -7,7 +7,9 @@
     voice list                        the packs on the site (from the local labels file)
     voice remove <pack name>          delete a pack from the site
     voice status <script or project>  recorded / total per language and group
-    voice import <recordings.zip> [--project DIR] [--dry-run]
+    voice export <script or project> [same filters as make] [--out DIR]   a CSV + Markdown recording sheet
+    voice export … --chunk 50                         the same, cut into parts of 50 lines
+    voice import <zips, folders of zips, or a folder of files>… [--project DIR] [--lang fa] [--dry-run]
 
 A *script* (`*.voice.json`, format hichgah-voice-script/1) is written by each app's own tool and lists
 every line it could record: {lang, id, text, group, direction, picture|image, dest, recorded, onImport}.
@@ -72,7 +74,10 @@ def find_script(path):
     found = []
     for folder in ('tool', 'tools', 'Tool', 'Tools'):
         found += glob.glob(os.path.join(path, folder, '**', '*.voice.json'), recursive=True)
-    found = sorted({(os.stat(f).st_dev, os.stat(f).st_ino): f for f in found}.values())  # tool/ = Tool/ on macOS
+    unique = {}
+    for f in found:                                      # tool/ and Tool/ are one folder on macOS: keep the first spelling
+        unique.setdefault((os.stat(f).st_dev, os.stat(f).st_ino), f)
+    found = sorted(unique.values())
     if len(found) != 1:
         sys.exit(f'{path}: expected one tool/**/*.voice.json, found {len(found)}')
     return found[0]
@@ -80,7 +85,7 @@ def find_script(path):
 
 def load_script(path):
     path = find_script(path)
-    script = json.load(open(path, encoding='utf-8'))
+    script = read_json(path, encoding='utf-8')
     if script.get('format') != SCRIPT_FORMAT:
         sys.exit(f'{path}: not a {SCRIPT_FORMAT} script')
     keys = set()
@@ -148,8 +153,18 @@ def ask_password(confirm):
     return password
 
 
+def read_json(path, **kw):
+    with open(path, **kw) as f:
+        return json.load(f)
+
+
+def write_json(path, data, **kw):
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, **kw)
+
+
 def labels():
-    return json.load(open(LABELS)) if os.path.exists(LABELS) else {}
+    return read_json(LABELS) if os.path.exists(LABELS) else {}
 
 
 # ---------- commands ----------
@@ -187,11 +202,11 @@ def cmd_make(a):
     os.makedirs(PACKS, exist_ok=True)
     path = os.path.join(PACKS, name + '.pack')
     replaced = os.path.exists(path)
-    json.dump(encrypt(password, content), open(path, 'w'))
+    write_json(path, encrypt(password, content))
     tags = labels()
     tags[name] = {'person': a.person or '', 'made': content['made'], 'apps': [s['app'] for s in content['scripts']],
                   'lines': sum(len(s['lines']) for s in content['scripts'])}
-    json.dump(tags, open(LABELS, 'w'), ensure_ascii=False, indent=2)
+    write_json(LABELS, tags, ensure_ascii=False, indent=2)
     print(('Replaced' if replaced else 'Wrote') + f' {os.path.relpath(path, SITE)}')
     print('\n'.join(summary))
     if a.new_password:
@@ -203,7 +218,7 @@ def cmd_make(a):
 def cmd_show(a):
     password = ask_password(confirm=False)
     path = a.pack if os.path.exists(a.pack) else os.path.join(PACKS, a.pack.removesuffix('.pack') + '.pack')
-    content = decrypt(password, json.load(open(path)))
+    content = decrypt(password, read_json(path))
     print(f"For {content['person'] or '(no name)'}, made {content['made']}")
     for s in content['scripts']:
         print(f"{s['title']} ({s['app']}): {len(s['lines'])} lines")
@@ -229,7 +244,7 @@ def cmd_remove(a):
     os.remove(path)
     tags = labels()
     tags.pop(name, None)
-    json.dump(tags, open(LABELS, 'w'), ensure_ascii=False, indent=2)
+    write_json(LABELS, tags, ensure_ascii=False, indent=2)
     print(f'Removed {name}. Push the site repo to take it offline.')
 
 
@@ -288,13 +303,17 @@ def write_json_like(path, data, original_text):
     if keys == sorted(keys):
         data = dict(sorted(data.items()))
     text = json.dumps(data, ensure_ascii=False, indent=indent)
-    open(path, 'w', encoding='utf-8').write(text + ('\n' if original_text.endswith('\n') or not original_text else ''))
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text + ('\n' if original_text.endswith('\n') or not original_text else ''))
 
 
 def apply_steps(project, steps, recorded_text, dry):
     for step in steps:
         path = os.path.join(project, step['json'])
-        original = open(path, encoding='utf-8').read() if os.path.exists(path) else ''
+        original = ''
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as f:
+                original = f.read()
         data = json.loads(original) if original.strip() else {}
         if 'set' in step:
             data[step['set']] = step.get('value', '{text}').replace('{text}', recorded_text)
@@ -304,17 +323,107 @@ def apply_steps(project, steps, recorded_text, dry):
             write_json_like(path, data, original)
 
 
-def cmd_import(a):
-    z = zipfile.ZipFile(a.zip)
+AUDIO_EXTS = ('.wav', '.m4a', '.mp3', '.aif', '.aiff', '.caf', '.flac', '.aac', '.mp4')
+
+
+def read_wav(data, name):
+    with wave.open(io.BytesIO(data)) as w:
+        if w.getnchannels() != 1 or w.getsampwidth() != 2:
+            raise ValueError(f'{name}: expected mono 16-bit')
+        return array.array('h', w.readframes(w.getnframes())), w.getframerate()
+
+
+def to_wav(path, tmp):
+    """Any audio afconvert reads -> mono 16-bit WAV bytes (stereo is mixed down)."""
+    out = os.path.join(tmp, 'in.wav')
+    subprocess.run(['afconvert', '-f', 'WAVE', '-d', 'LEI16', '-c', '1', path, out], check=True, capture_output=True)
+    with open(out, 'rb') as f:
+        return f.read()
+
+
+def local(iso):
+    """An ISO time (UTC from the page) as this Mac's local time: '25 Nov 14:32'."""
+    try:
+        return datetime.datetime.fromisoformat(iso.replace('Z', '+00:00')).astimezone().strftime('%d %b %H:%M')
+    except (AttributeError, ValueError):
+        return '?'
+
+
+def zip_source(path):
+    """The page's zip: (who, clips, notes); each clip has app, lang, id, text and a WAV loader."""
+    z = zipfile.ZipFile(path)
     rec = json.loads(z.read('recordings.json'))
     if rec.get('format') != RECORDINGS_FORMAT:
         sys.exit('Not a Hichgah voice recordings zip')
-    apps = sorted({c['app'] for c in rec['clips']} | {n['app'] for n in rec.get('notes', [])})
-    if a.project and len(apps) > 1:
-        sys.exit(f'This zip has several apps ({", ".join(apps)}): leave out --project')
     who = rec.get('person') or 'someone'
-    print(f"Recordings by {who}, sent {rec.get('exported', '?')[:16]}: {len(rec['clips'])} clips")
-    notes = []
+    part = f" (file {rec['part']})" if rec.get('part') else ''
+    taken = sorted(c.get('recordedAt', '') for c in rec['clips'] if c.get('recordedAt'))
+    span = f", recorded {local(taken[0])}" + (f" to {local(taken[-1])}" if local(taken[-1]) != local(taken[0]) else '') if taken else ''
+    print(f"{os.path.basename(path)}: by {who}, sent {local(rec.get('exported'))}{part}: {len(rec['clips'])} clips{span}")
+    for c in rec['clips']:
+        c['load'] = (lambda f: lambda tmp: z.read(f))(c['file'])
+    return who, rec['clips'], rec.get('notes', [])
+
+
+def folder_source(folder, project, lang):
+    """A folder of files named after the lines: <lang>/<id>.<ext>, or <id>.<ext> (any audio afconvert reads)."""
+    script = load_script(project)
+    by_id = {}
+    for l in script['lines']:
+        by_id.setdefault(l['id'], []).append(l)
+    clips = []
+    for root, _, files in os.walk(folder):
+        for f in sorted(files):
+            stem, ext = os.path.splitext(f)
+            if ext.lower() not in AUDIO_EXTS:
+                continue
+            sub = os.path.relpath(root, folder)
+            want = lang or (sub if sub != '.' else None)
+            matches = [l for l in by_id.get(stem, []) if not want or l['lang'] == want]
+            path = os.path.join(root, f)
+            if len(matches) != 1:
+                why = 'no line has this id' if not matches else 'several languages: put it in a <lang>/ folder or pass --lang'
+                print(f'  skipped {os.path.relpath(path, folder)}: {why}')
+                continue
+            l = matches[0]
+            stamp = datetime.datetime.fromtimestamp(os.path.getmtime(path), datetime.timezone.utc).isoformat()
+            clips.append({'app': script['app'], 'lang': l['lang'], 'id': l['id'], 'text': l['text'], 'recordedAt': stamp,
+                          'load': (lambda p: lambda tmp: to_wav(p, tmp))(path)})
+    print(f'Recordings in {folder}: {len(clips)} files match lines of {script["title"]}')
+    return 'the voice person', clips, []
+
+
+def gather(sources, project, lang):
+    """Recordings from any number of zips (or folders of zips) and folders of files. A line recorded more than
+    once (sent again, or in two batches) keeps its newest take."""
+    expanded = []
+    for src in sources:
+        zips = sorted(glob.glob(os.path.join(src, '*.zip'))) if os.path.isdir(src) else []
+        expanded += zips or [src]
+    people, best, notes = [], {}, {}
+    for src in expanded:
+        who, clips, found = folder_source(src, project or '.', lang) if os.path.isdir(src) else zip_source(src)
+        if who not in people:
+            people.append(who)
+        for c in clips:
+            key = (c['app'], c['lang'], c['id'])
+            if key not in best or c.get('recordedAt', '') > best[key].get('recordedAt', ''):
+                best[key] = c
+        for n in found:
+            notes[(n['app'], n['lang'], n['id'], n['note'])] = n
+    if len(expanded) > 1:
+        print(f'{len(best)} lines in {len(expanded)} sources (the newest take of each)')
+    first = expanded[0]
+    notes_path = (first.rstrip('/') if os.path.isdir(first) else os.path.splitext(first)[0]) + '-notes.txt'
+    return ' and '.join(people), list(best.values()), list(notes.values()), notes_path
+
+
+def cmd_import(a):
+    who, clips, notes, notes_path = gather(a.source, a.project, a.lang)
+    apps = sorted({c['app'] for c in clips} | {n['app'] for n in notes})
+    if a.project and len(apps) > 1:
+        sys.exit(f'These recordings are for several apps ({", ".join(apps)}): leave out --project')
+    kept = []
     with tempfile.TemporaryDirectory() as tmp:
         for app in apps:
             project = a.project or os.path.join(HICHGAH, app)
@@ -324,7 +433,7 @@ def cmd_import(a):
             lines = {f"{l['lang']}/{l['id']}": l for l in script['lines']}
             audio = script.get('audio', {})
             placed = 0
-            for clip in (c for c in rec['clips'] if c['app'] == app):
+            for clip in (c for c in clips if c['app'] == app):
                 key = f"{clip['lang']}/{clip['id']}"
                 line = lines.get(key)
                 if line is None:
@@ -332,11 +441,11 @@ def cmd_import(a):
                     continue
                 if line['text'] != clip['text']:
                     print(f'  note {key}: recorded «{clip["text"]}», the app now says «{line["text"]}»')
-                with wave.open(io.BytesIO(z.read(clip['file']))) as w:
-                    rate = w.getframerate()
-                    if w.getnchannels() != 1 or w.getsampwidth() != 2:
-                        sys.exit(f"{clip['file']}: expected mono 16-bit")
-                    samples = array.array('h', w.readframes(w.getnframes()))
+                try:
+                    samples, rate = read_wav(clip['load'](tmp), key)
+                except (ValueError, subprocess.CalledProcessError) as e:
+                    print(f'  skipped {key}: {e}')
+                    continue
                 clean = tidy(samples, rate)
                 if clean is None:
                     print(f'  skipped {key}: the clip is silent')
@@ -346,7 +455,8 @@ def cmd_import(a):
                 warn = f'  (longer than {limit} s!)' if limit and seconds > limit else ''
                 dest = os.path.join(project, line['dest'])
                 existed = os.path.exists(dest)
-                print(f"  {'replaced' if existed else 'new     '} {line['dest']}  {seconds:.2f} s{warn}")
+                at = f"  (recorded {local(clip['recordedAt'])})" if clip.get('recordedAt') else ''
+                print(f"  {'replaced' if existed else 'new     '} {line['dest']}  {seconds:.2f} s{at}{warn}")
                 if not a.dry_run:
                     tmp_wav = os.path.join(tmp, 'clip.wav')
                     with wave.open(tmp_wav, 'wb') as w:
@@ -360,17 +470,59 @@ def cmd_import(a):
             print(f"{script['title']}: {placed} clips {'would be ' if a.dry_run else ''}placed in {project}")
             if placed and script.get('afterImport'):
                 print(f"  next, in {project}: {script['afterImport']}")
-            notes += [n for n in rec.get('notes', []) if n['app'] == app]
-    if notes:
+            kept += [n for n in notes if n['app'] == app]
+    if kept:
         print(f'\nNotes from {who}:')
-        for n in notes:
+        for n in kept:
             print(f"  {n['app']} {n['lang']}/{n['id']}  «{n['text']}»\n      {n['note']}")
         if not a.dry_run:
-            path = os.path.splitext(a.zip)[0] + '-notes.txt'
-            with open(path, 'w', encoding='utf-8') as f:
-                for n in notes:
+            with open(notes_path, 'w', encoding='utf-8') as f:
+                for n in kept:
                     f.write(f"{n['app']} {n['lang']}/{n['id']}\t{n['text']}\t{n['note']}\n")
-            print(f'(saved in {path})')
+            print(f'(saved in {notes_path})')
+
+
+def cmd_export(a):
+    """The lines as a recording sheet for someone using their own studio: CSV + Markdown, one file name per line."""
+    import csv
+    for path in a.script:
+        script = load_script(path)
+        lines = pick(script, a.lang, a.group, a.id, a.missing)
+        if not lines:
+            print(f"{script['title']}: no lines match")
+            continue
+        out = a.out or f"{script['app']}-voice-lines-{datetime.date.today().isoformat()}"
+        os.makedirs(out, exist_ok=True)
+        all_rows = [{'file': f"{l['lang']}/{l['id']}.wav", 'lang': l['lang'], 'id': l['id'], 'group': l['group'],
+                 'text': l['text'], 'direction': l.get('direction', ''), 'recorded': 'yes' if l.get('recorded') else ''}
+                for l in lines]
+        size = a.chunk or len(all_rows)
+        chunks = [all_rows[n:n + size] for n in range(0, len(all_rows), size)]
+        for c, rows in enumerate(chunks, 1):
+            name = f'part{c:02d}-' if len(chunks) > 1 else ''
+            title = f" (part {c} of {len(chunks)})" if len(chunks) > 1 else ''
+            with open(os.path.join(out, f'{name}lines.csv'), 'w', newline='', encoding='utf-8-sig') as f:   # BOM: Excel reads UTF-8
+                w = csv.DictWriter(f, fieldnames=list(rows[0]))
+                w.writeheader()
+                w.writerows(rows)
+            md = [f"# {script['title']}: lines to record{title}", '',
+                  f"{len(rows)} lines. Record **one file per line**, named as in the *File* column (for example "
+                  f"`{rows[0]['file']}`), in a folder per language. WAV (or M4A), mono, 44.1 or 48 kHz; leave about "
+                  "half a second of silence before and after; no music or effects. Trimming and loudness are done for you.", '']
+            if script.get('guide'):
+                md += ['**The voice:** ' + script['guide'], '']
+            group = None
+            for r in rows:
+                if r['group'] != group:
+                    group = r['group']
+                    md += ['', f'## {group}', '', '| File | Line | How |', '|---|---|---|']
+                md.append(f"| `{r['file']}` | {r['text']} | {r['direction'].replace('|', '/')} |")
+            with open(os.path.join(out, f'{name}lines.md'), 'w', encoding='utf-8') as f:
+                f.write('\n'.join(md) + '\n')
+        files = 'lines.csv and lines.md' if len(chunks) == 1 else f'part01-lines.csv/.md … part{len(chunks):02d}'
+        print(f"{script['title']}: {len(all_rows)} lines -> {out}/{files}")
+        project = path if os.path.isdir(path) else '<app folder>'
+        print(f"  when the files come back: voice import <folder> --project {project}")
 
 
 def main():
@@ -392,13 +544,24 @@ def main():
     r.add_argument('name')
     st = sub.add_parser('status', help='what is recorded already')
     st.add_argument('script')
-    i = sub.add_parser('import', help='put the recordings from a zip into the app')
-    i.add_argument('zip')
-    i.add_argument('--project', help='the app folder (default: the sibling folder named after the app)')
+    e = sub.add_parser('export', help='the lines as a CSV + Markdown sheet, for recording in a studio')
+    e.add_argument('script', nargs='+', help='a *.voice.json script or an app project folder')
+    e.add_argument('--lang', action='append', default=[])
+    e.add_argument('--group', action='append', default=[])
+    e.add_argument('--id', action='append', default=[])
+    e.add_argument('--missing', action='store_true')
+    e.add_argument('--out', help='folder to write (default: <app>-voice-lines-<date>)')
+    e.add_argument('--chunk', type=int, help='lines per part: partNN-lines.csv/.md, to record and send part by part')
+    i = sub.add_parser('import', help='put recordings into the app: the page\'s zip, or a folder of <lang>/<id>.<ext> files')
+    i.add_argument('source', nargs='+', help='recordings zips from the page (or a folder of them), '
+                                             'or a folder of audio files named after the lines')
+    i.add_argument('--project', help='the app folder (default: the sibling folder named after the app; '
+                                    'for a folder of files: the current folder)')
+    i.add_argument('--lang', help='for a folder of files without <lang>/ subfolders')
     i.add_argument('--dry-run', action='store_true')
     a = p.parse_args()
     {'make': cmd_make, 'show': cmd_show, 'list': cmd_list, 'remove': cmd_remove,
-     'status': cmd_status, 'import': cmd_import}[a.cmd](a)
+     'status': cmd_status, 'export': cmd_export, 'import': cmd_import}[a.cmd](a)
 
 
 if __name__ == '__main__':

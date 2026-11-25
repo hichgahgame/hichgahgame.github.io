@@ -208,3 +208,13 @@ ol.steps li::marker { color: var(--accent); font-weight: 700; }
 .preview::after { content: "example"; position: absolute; top: 12px; inset-inline-end: 14px; font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .mic.fake, .play.fake { display: inline-flex; align-items: center; justify-content: center; border: 2px solid transparent; }
 .play.fake { border-color: var(--line); color: var(--muted); }
+
+/* Parts */
+.parts .line { min-height: 72px; }
+.part-name { font-weight: 700; font-size: 1.05rem; }
+.part-count { flex: none; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
+.mini { display: block; height: 6px; margin-top: 8px; background: var(--line); border-radius: 999px; overflow: hidden; max-width: 220px; }
+.mini > span { display: block; height: 100%; background: var(--hg-leaf); border-radius: 999px; }
+.center { text-align: center; margin-top: 8px; }
+ul.files { padding-inline-start: 1.1em; margin: 6px 0 4px; overflow-wrap: anywhere; }
+.top select { width: auto; flex: none; max-width: 45%; }

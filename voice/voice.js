@@ -3,8 +3,10 @@
 // nothing can be listed or read without it. Recordings are kept in this browser (IndexedDB) until the
 // person sends them as one zip (recordings.json + WAV files), which `voice import` puts into the app.
 
-const ITERATIONS = 310000;                       // as voice_pack.py
-const NAME_SALT = 'hichgah-voice-pack-name/1';
+import {
+  enc, packName, decryptPack, splitParts, isNew, batchBySize, stamp, when, downsample, peakOf, verdict, wavBytes, zip, safe,
+} from './core.js';
+
 const MAX_SECONDS = 30;                          // a recording stops by itself after this
 const SKIP_START = 0.1;                          // seconds dropped at the start (the tap on the button)
 const SECONDS_PER_LINE = 15;                     // for the time estimate: read, record, listen
@@ -47,9 +49,6 @@ function icon(name) {
   return svg;
 }
 
-const enc = (s) => new TextEncoder().encode(s);
-const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-const hex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 const rtl = (lang) => ['fa', 'ar', 'he', 'ur'].includes(lang);
 const minutes = (n) => Math.max(5, Math.ceil((n * SECONDS_PER_LINE) / 60 / 5) * 5);
 
@@ -68,22 +67,12 @@ function picture(script, line, cls) {
 
 // ---------- crypto ----------
 
-async function pbkdf2(password, salt, bytes, iterations = ITERATIONS) {
-  const base = await crypto.subtle.importKey('raw', enc(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations }, base, bytes * 8);
-  return new Uint8Array(bits);
-}
-
 async function openPack(password) {
-  const name = hex(await pbkdf2(password, enc(NAME_SALT), 16));
+  const name = await packName(password);
   const res = await fetch(`packs/${name}.pack`, { cache: 'no-store' });
   if (res.status === 404) throw new Error('wrong');
   if (!res.ok) throw new Error('network');
-  const pack = await res.json();
-  const raw = await pbkdf2(password, b64(pack.salt), 32, pack.iterations);
-  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
-  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(pack.iv) }, key, b64(pack.data));
-  return JSON.parse(new TextDecoder().decode(plain));
+  return decryptPack(password, await res.json());
 }
 
 // ---------- storage (IndexedDB): clips = WAV bytes, meta = {seconds, at, text}, notes = {note, text, at} ----------
@@ -117,27 +106,44 @@ async function dbAll(store) {
 
 // ---------- state ----------
 
+const PART_SIZE = 20;            // lines per part (a script can set partSize)
 const state = {
   password: '',
   pack: null,
   scriptIndex: 0,
   lang: null,
   group: null,        // null = every group
-  onlyLeft: false,
-  meta: new Map(),    // `${app}|${lang}/${id}` -> {seconds, at, text}
+  hideDone: false,
+  meta: new Map(),    // `${app}|${lang}/${id}` -> {seconds, at, text, sentAt?}
   notes: new Map(),
-  index: 0,           // the line open in the recorder, in the filtered list
+  part: 0,            // index into partsFor() of the part open
+  index: 0,           // the line open in the recorder, within the part
+  session: new Set(), // keys recorded since the page opened
 };
 const keyOf = (script, line) => `${script.app}|${line.lang}/${line.id}`;
 const script = () => state.pack.scripts[state.scriptIndex];
 const langs = (s) => [...new Set(s.lines.map((l) => l.lang))];
-function linesFor(s, { lang = state.lang, group = state.group, onlyLeft = state.onlyLeft } = {}) {
-  return s.lines.filter((l) => l.lang === lang && (!group || l.group === group) && (!onlyLeft || !state.meta.has(keyOf(s, l))));
-}
-const recordedCount = (s, lines) => lines.filter((l) => state.meta.has(keyOf(s, l))).length;
+const has = (s, l) => state.meta.has(keyOf(s, l));
+const recordedCount = (s, lines) => lines.filter((l) => has(s, l)).length;
 const allLines = () => state.pack.scripts.flatMap((s) => s.lines.map((l) => [s, l]));
+const unsent = () => allLines().filter(([s, l]) => isNew(state.meta.get(keyOf(s, l)))).length;
 const firstVisit = () => localStorage.getItem(`hichgah-voice-welcomed-${state.pack.made}-${state.pack.person}`) !== '1';
 const markWelcomed = () => localStorage.setItem(`hichgah-voice-welcomed-${state.pack.made}-${state.pack.person}`, '1');
+
+// Every group of the current language, cut into parts of about PART_SIZE lines (core.js splitParts).
+function partsFor(s = script(), lang = state.lang) {
+  return splitParts(s.lines.filter((l) => l.lang === lang), s.partSize || PART_SIZE);
+}
+const totalParts = () => state.pack.scripts.reduce((n, sc) => n + langs(sc).reduce((m, l) => m + partsFor(sc, l).length, 0), 0);
+const partLabel = (p) => (p.of > 1 ? `${p.group} · part ${p.n} of ${p.of}` : p.group);
+const partDone = (s, p) => p.lines.every((l) => has(s, l));
+const nextPartIndex = (s, parts, from = 0) => {
+  for (let i = 0; i < parts.length; i++) {
+    const j = (from + i) % parts.length;
+    if (!partDone(s, parts[j]) && (!state.group || parts[j].group === state.group)) return j;
+  }
+  return -1;
+};
 
 function show(...nodes) {
   stopPlayback();
@@ -199,6 +205,7 @@ async function unlock(password, remember) {
   state.scriptIndex = 0;
   state.lang = langs(script())[0];
   navigator.storage?.persist?.();
+  state.session = new Set();
   if (firstVisit()) showWelcome(0); else showList();
 }
 
@@ -244,7 +251,7 @@ function showWelcome(step) {
       el('h2', { text: 'What you will see' }),
       el('p', { text: 'One line at a time, like this one from your list. Read the line out loud, as it is written.' }),
       el('div', { class: 'card preview recorder', 'aria-hidden': 'true' },
-        el('div', { class: 'count', text: `1 / ${linesFor(s, { group: null, onlyLeft: false }).length}` }),
+        el('div', { class: 'count', text: `1 / ${partsFor()[0]?.lines.length || 1}` }),
         el('span', { class: 'group', text: line.group }),
         picture(s, line, 'picture'),
         el('div', {}, say(line.text, line.lang, 'say')),
@@ -269,8 +276,9 @@ function showWelcome(step) {
         el('li', {}, 'Tap ', el('b', { text: 'Next' }), '. A green tick marks each line you have recorded.'),
         el('li', {}, 'Something looks wrong (a typo, a word that sounds odd)? Tap ', el('b', { text: 'Add a note' }),
           ' and tell us. Notes are sent with the recordings.')),
-      el('p', { class: 'muted', text: 'You don’t have to go in order or finish in one go: the list shows what is left, '
-        + 'and you can filter it by group.' }),
+      el('p', { text: `Your ${total} lines are cut into ${totalParts()} part${totalParts() === 1 ? '' : 's'} of about 20 lines `
+        + '(around 5 minutes each). Do one part, take a break, come back another day: the page remembers where you stopped, '
+        + 'and Continue takes you there.' }),
     ];
   } else if (step === 3) {
     body = [
@@ -289,7 +297,8 @@ function showWelcome(step) {
         el('li', {}, 'Tap ', el('b', { text: 'Send recordings' }), ' on the list. It makes one file with everything you recorded.'),
         el('li', {}, 'Send that file to the person who gave you the password, the way you usually talk: WhatsApp '
           + '(as a document), Telegram, email or Google Drive.'),
-        el('li', {}, 'You can send part of it now and the rest later: each file has everything recorded so far.')),
+        el('li', {}, 'Send whenever you like: after each part, after each session, or once at the end. Each time, only the '
+          + 'new recordings are sent. A big batch comes as a few files of at most 15 MB, so they fit in a message.')),
       el('div', { class: 'card' },
         el('p', {}, el('b', { text: 'Your recordings stay on this device, in this browser, until you send them.' })),
         el('p', { class: 'muted', text: 'Nothing is uploaded and nobody else can hear them. Keep using the same browser '
@@ -349,21 +358,45 @@ function micTest() {
 }
 function stopTest() { if (recorder.active) recorder.stop(); }
 
-// ---------- the list ----------
+// ---------- the list of parts ----------
+
+// Views: list -> part -> recorder; the phone's back button goes up one level.
+function go(view, replace = false) {
+  if (replace) history.replaceState({ view }, '');
+  else if (history.state?.view !== view) history.pushState({ view }, '');
+}
+window.addEventListener('popstate', (e) => {
+  if (!state.pack) return;
+  if (recorder.active) recorder.stop();
+  const view = e.state?.view;
+  if (view === 'rec') showRecorder();
+  else if (view === 'part') showPart();
+  else showList();
+});
+
+function sendButtons() {
+  const fresh = unsent();
+  const notes = freshNotes();
+  const any = allLines().some(([s, l]) => has(s, l));
+  const label = fresh ? `Send new recordings (${fresh})` : notes ? `Send your notes (${notes})` : any ? 'Everything is sent ✓' : 'Send recordings';
+  return [
+    el('button', { class: 'send', disabled: !fresh && !notes, text: label, onclick: () => showSend('new') }),
+    any && !fresh ? el('button', { class: 'link', text: 'Send everything again', onclick: () => showSend('all') }) : null,
+    lastSent() ? el('p', { class: 'muted small center', text: `Last sent ${when(lastSent())}` }) : null,
+  ];
+}
 
 function showList() {
   const s = script();
-  const all = linesFor(s, { group: null, onlyLeft: false });
+  const parts = partsFor();
+  const all = parts.flatMap((p) => p.lines);
   const done = recordedCount(s, all);
-  const shown = linesFor(s);
-  const sending = allLines().filter(([sc, l]) => state.meta.has(keyOf(sc, l))).length;
-
-  const groups = [...new Set(all.map((l) => l.group))];
+  const next = nextPartIndex(s, parts);
+  const groups = [...new Set(parts.map((p) => p.group))];
   const chip = (label, value) => el('button', {
     class: 'chip', 'aria-pressed': String(state.group === value), text: label,
     onclick: () => { state.group = value; showList(); },
   });
-
   const scriptTabs = state.pack.scripts.length > 1 ? el('div', { class: 'chips' }, state.pack.scripts.map((x, i) =>
     el('button', { class: 'chip', 'aria-pressed': String(i === state.scriptIndex), text: x.title,
       onclick: () => { state.scriptIndex = i; state.lang = langs(x)[0]; state.group = null; showList(); } }))) : null;
@@ -371,22 +404,23 @@ function showList() {
     onchange: (e) => { state.lang = e.target.value; state.group = null; showList(); } },
   langs(s).map((l) => el('option', { value: l, selected: l === state.lang, text: s.languages?.[l] || l }))) : null;
 
-  const firstLeft = shown.findIndex((l) => !state.meta.has(keyOf(s, l)));
-  const list = el('ul', { class: 'lines' }, shown.map((line, i) => {
-    const k = keyOf(s, line);
-    const has = state.meta.has(k);
+  const shown = parts.map((p, i) => [p, i]).filter(([p]) => (!state.group || p.group === state.group) && !(state.hideDone && partDone(s, p)));
+  const list = el('ul', { class: 'lines parts' }, shown.map(([p, i]) => {
+    const n = recordedCount(s, p.lines);
+    const complete = n === p.lines.length;
     return el('li', {}, el('button', {
-      class: 'line' + (has ? ' done' : ''),
-      'aria-label': `${line.text}, ${has ? 'recorded' : 'not recorded yet'}`,
-      onclick: () => openRecorder(i),
+      class: 'line' + (complete ? ' done' : ''),
+      'aria-label': `${partLabel(p)}, ${n} of ${p.lines.length} recorded`,
+      onclick: () => openPart(i),
     },
-    el('span', { class: 'state', text: has ? '✓' : '' }),
-    picture(s, line, 'pic'),
-    el('span', { class: 'what' }, say(line.text, line.lang, 'say'),
-      el('span', { class: 'sub', text: [line.group, line.direction].filter(Boolean).join(' · ') })),
-    state.notes.has(k) ? el('span', { class: 'flag', text: 'note' }) : null));
+    el('span', { class: 'state', text: complete ? '✓' : '' }),
+    el('span', { class: 'what' },
+      el('span', { class: 'part-name', text: partLabel(p) }),
+      el('span', { class: 'mini' }, el('span', { style: `width:${(100 * n) / p.lines.length}%` }))),
+    el('span', { class: 'part-count', text: `${n} / ${p.lines.length}` })));
   }));
 
+  go('list', true);
   show(header(),
     el('div', { class: 'top' },
       el('div', {}, el('h1', { text: s.title }),
@@ -396,53 +430,89 @@ function showList() {
     el('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(all.length), 'aria-valuenow': String(done) },
       el('span', { style: `width:${all.length ? (100 * done) / all.length : 0}%` })),
     el('p', { class: 'muted small', text: done === all.length && all.length
-      ? `All ${all.length} lines recorded. Thank you! Send them when you are ready.`
-      : `${done} of ${all.length} recorded` }),
+      ? `All ${all.length} lines recorded. Thank you!`
+      : `${done} of ${all.length} recorded, in ${parts.length} part${parts.length === 1 ? '' : 's'}` + (state.session.size ? ` · ${state.session.size} this session` : '') }),
     el('div', { class: 'actions' },
-      el('button', { class: 'primary', disabled: !shown.length, text: firstLeft >= 0 ? (done ? 'Continue recording' : 'Start recording') : 'Listen again from the start',
-        onclick: () => openRecorder(Math.max(0, firstLeft)) }),
-      el('button', { class: 'send', disabled: !sending, text: sending ? `Send recordings (${sending})` : 'Send recordings',
-        onclick: showSend })),
+      next >= 0 ? el('button', { class: 'primary', onclick: () => openPart(next, true) },
+        el('span', { text: done ? 'Continue: ' : 'Start: ' }), el('span', { text: partLabel(parts[next]) })) : null,
+      sendButtons()),
     groups.length > 1 ? el('div', { class: 'chips', role: 'group', 'aria-label': 'Groups' },
       chip('All', null), groups.map((g) => chip(g, g))) : null,
     el('label', { class: 'check' },
-      el('input', { type: 'checkbox', checked: state.onlyLeft, onchange: (e) => { state.onlyLeft = e.target.checked; showList(); } }),
-      'Only the lines not recorded yet'),
+      el('input', { type: 'checkbox', checked: state.hideDone, onchange: (e) => { state.hideDone = e.target.checked; showList(); } }),
+      'Hide the finished parts'),
     shown.length ? list : el('p', { class: 'muted', text: 'Nothing left here. 🎉' }),
     el('div', { class: 'row nav' },
       el('button', { class: 'link', text: 'How it works', onclick: () => showWelcome(1) }),
       el('button', { class: 'link', text: 'Lock this page', onclick: lock })));
 }
 
+// A part: its lines, and the way into the recorder. `straightIn` opens the first line not recorded yet.
+function openPart(i, straightIn = false) {
+  state.part = i;
+  go('part');
+  if (straightIn) {
+    const p = partsFor()[i];
+    openRecorder(Math.max(0, p.lines.findIndex((l) => !has(script(), l))));
+  } else {
+    showPart();
+  }
+}
+
+function showPart() {
+  const s = script();
+  const p = partsFor()[state.part];
+  if (!p) return showList();
+  const n = recordedCount(s, p.lines);
+  const first = p.lines.findIndex((l) => !has(s, l));
+  const list = el('ul', { class: 'lines' }, p.lines.map((line, i) => {
+    const k = keyOf(s, line);
+    const done = state.meta.has(k);
+    return el('li', {}, el('button', {
+      class: 'line' + (done ? ' done' : ''),
+      'aria-label': `${line.text}, ${done ? 'recorded' : 'not recorded yet'}`,
+      onclick: () => openRecorder(i),
+    },
+    el('span', { class: 'state', text: done ? '✓' : '' }),
+    picture(s, line, 'pic'),
+    el('span', { class: 'what' }, say(line.text, line.lang, 'say'),
+      line.direction ? el('span', { class: 'sub', text: line.direction }) : null),
+    state.notes.has(k) ? el('span', { class: 'flag', text: 'note' }) : null));
+  }));
+  show(
+    el('div', { class: 'top' },
+      el('button', { class: 'link', text: '‹ All parts', onclick: () => history.back() }),
+      el('span', { class: 'count muted', text: `${n} / ${p.lines.length}` })),
+    el('h1', { text: partLabel(p) }),
+    el('div', { class: 'progress' }, el('span', { style: `width:${(100 * n) / p.lines.length}%` })),
+    el('div', { class: 'actions' },
+      el('button', { class: 'primary', text: first < 0 ? 'Listen again from the start' : (n ? 'Continue this part' : 'Record this part'),
+        onclick: () => openRecorder(Math.max(0, first)) })),
+    list);
+}
+
 // ---------- the recorder ----------
 
 let wakeLock = null;
-let filtered = [];
 
 function openRecorder(index) {
-  filtered = linesFor(script());
   state.index = index;
-  if (history.state?.view !== 'rec') history.pushState({ view: 'rec' }, '');
+  go('rec');
   navigator.wakeLock?.request('screen').then((w) => { wakeLock = w; }).catch(() => {});
   showRecorder();
 }
 
-function leaveRecorder() {
-  if (recorder.active) recorder.stop();
+function releaseWake() {
   wakeLock?.release().catch(() => {});
   wakeLock = null;
-  if (history.state?.view === 'rec') history.back(); else showList();
 }
-
-window.addEventListener('popstate', () => {
-  if (!state.pack) return;
-  if (recorder.active) recorder.stop();
-  showList();
-});
 
 async function showRecorder(message) {
   const s = script();
-  const line = filtered[state.index];
+  const part = partsFor()[state.part];
+  if (!part) return showList();
+  const lines = part.lines;
+  const line = lines[state.index];
   const k = keyOf(s, line);
   const meta = state.meta.get(k);
   const note = state.notes.get(k);
@@ -450,7 +520,7 @@ async function showRecorder(message) {
   const status = el('p', { class: 'status', role: 'status' });
   const setStatus = (text, cls = '') => { status.className = 'status ' + cls; status.textContent = text; };
   if (message) setStatus(message.text, message.cls);
-  else if (meta) setStatus(`Recorded ✓ (${meta.seconds.toFixed(1)} s). Record again to replace it.`, 'good');
+  else if (meta) setStatus(`Recorded ✓ ${meta.seconds.toFixed(1)} s · ${when(meta.at)}${meta.sentAt && meta.sentAt >= meta.at ? ' · sent' : ''}. Record again to replace it.`, 'good');
   else setStatus('Not recorded yet');
 
   const meter = el('div', { class: 'meter', 'aria-hidden': 'true' }, el('span'));
@@ -467,6 +537,7 @@ async function showRecorder(message) {
       const m = { seconds: take.seconds, at: new Date().toISOString(), text: line.text };
       await dbPut('meta', k, m);
       state.meta.set(k, m);
+      state.session.add(k);
       const long = line.maxSeconds && take.seconds > line.maxSeconds + 1.2;   // the importer trims the pauses
       await showRecorder(long
         ? { text: `Recorded, but it is long (${take.seconds.toFixed(1)} s). Try a shorter take, with shorter pauses.`, cls: 'warn' }
@@ -491,31 +562,32 @@ async function showRecorder(message) {
   const noteText = el('textarea', { 'aria-label': 'Note', dir: 'auto', placeholder: 'For example: a typo, a word that sounds odd, a better way to say it…' });
   noteText.value = note?.note || '';
   let noteTimer;
-  noteText.oninput = () => {
-    clearTimeout(noteTimer);
-    noteTimer = setTimeout(async () => {
-      const text = noteText.value.trim();
-      if (text) {
-        const n = { note: text, text: line.text, at: new Date().toISOString() };
-        state.notes.set(k, n);
-        await dbPut('notes', k, n);
-      } else {
-        state.notes.delete(k);
-        await dbDel('notes', k);
-      }
-    }, 400);
+  const saveNote = async () => {
+    const text = noteText.value.trim();
+    if (text === (state.notes.get(k)?.note || '')) return;
+    if (text) {
+      const n = { note: text, text: line.text, at: new Date().toISOString() };
+      state.notes.set(k, n);
+      await dbPut('notes', k, n);
+    } else {
+      state.notes.delete(k);
+      await dbDel('notes', k);
+    }
   };
+  noteText.oninput = () => { clearTimeout(noteTimer); noteTimer = setTimeout(saveNote, 400); };
   const noteBox = el('div', { class: 'note-box', hidden: !note }, noteText);
   const noteButton = el('button', { class: 'link', text: note ? 'Your note' : 'Add a note about this line',
     onclick: () => { noteBox.hidden = !noteBox.hidden; if (!noteBox.hidden) noteText.focus(); } });
 
-  const go = (d) => { if (recorder.active) recorder.stop(); clearTimeout(noteTimer); noteText.oninput(); state.index += d; showRecorder(); };
+  const leave = async (then) => { if (recorder.active) await recorder.stop(); clearTimeout(noteTimer); await saveNote(); then(); };
+  const step = (d) => leave(() => { state.index += d; showRecorder(); });
+  const last = state.index + 1 >= lines.length;
   show(
     el('div', { class: 'top' },
-      el('button', { class: 'link', text: '‹ All lines', onclick: leaveRecorder }),
-      el('span', { class: 'count muted', text: `${state.index + 1} / ${filtered.length}` })),
+      el('button', { class: 'link', text: '‹ Part', onclick: () => leave(() => { releaseWake(); history.back(); }) }),
+      el('span', { class: 'count muted', text: `${state.index + 1} / ${lines.length}` })),
     el('div', { class: 'card recorder' },
-      el('span', { class: 'group', text: line.group }),
+      el('span', { class: 'group', text: partLabel(part) }),
       picture(s, line, 'picture'),
       el('div', {}, say(line.text, line.lang, 'say')),
       line.direction ? el('p', { class: 'direction', text: line.direction }) : null,
@@ -525,19 +597,62 @@ async function showRecorder(message) {
       noteButton,
       noteBox),
     el('div', { class: 'row nav' },
-      el('button', { class: 'quiet', text: 'Previous', disabled: state.index === 0, onclick: () => go(-1) }),
-      state.index + 1 < filtered.length
-        ? el('button', { class: meta ? 'primary' : 'quiet', text: 'Next', onclick: () => go(1) })
-        : el('button', { class: 'primary', text: 'Done', onclick: leaveRecorder })));
+      el('button', { class: 'quiet', text: 'Previous', disabled: state.index === 0, onclick: () => step(-1) }),
+      last
+        ? el('button', { class: 'primary', text: 'Finish the part', onclick: () => leave(showPartDone) })
+        : el('button', { class: meta ? 'primary' : 'quiet', text: 'Next', onclick: () => step(1) })),
+    el('div', { class: 'center' }, el('button', { class: 'link', text: 'Take a break', onclick: () => leave(showBreak) })));
 }
 
 document.addEventListener('keydown', (e) => {
-  // On a computer: space records / stops, arrows move between lines.
+  // On a computer: space records / stops.
   if (e.target.matches('textarea, input, select')) return;
   const mic = app.querySelector('.recorder .mic:not(.fake)');
   if (!mic) return;
   if (e.code === 'Space') { e.preventDefault(); mic.click(); }
 });
+
+// The end of a part: on to the next one, send, or rest.
+function showPartDone() {
+  releaseWake();
+  const s = script();
+  const parts = partsFor();
+  const p = parts[state.part];
+  const n = recordedCount(s, p.lines);
+  const left = p.lines.length - n;
+  const next = nextPartIndex(s, parts, state.part + 1);
+  go('list', true);
+  show(header(),
+    el('h1', { text: left ? `${partLabel(p)}: almost there` : `${partLabel(p)}: done 🎉` }),
+    el('p', { text: left
+      ? `${n} of ${p.lines.length} recorded. ${left} line${left === 1 ? ' is' : 's are'} left in this part: you can come back to ${left === 1 ? 'it' : 'them'} any time.`
+      : `All ${p.lines.length} lines of this part are recorded. Thank you!` }),
+    el('div', { class: 'actions' },
+      left ? el('button', { class: 'quiet', text: 'Back to this part', onclick: () => openPart(state.part) }) : null,
+      next >= 0 ? el('button', { class: 'primary', onclick: () => openPart(next, true) },
+        el('span', { text: 'Next: ' }), el('span', { text: partLabel(parts[next]) })) : null,
+      sendButtons(),
+      el('button', { class: 'quiet', text: 'Take a break', onclick: showBreak })));
+}
+
+// A break: what this session did, and how to come back.
+function showBreak() {
+  releaseWake();
+  const s = script();
+  const all = partsFor().flatMap((p) => p.lines);
+  const done = recordedCount(s, all);
+  go('list', true);
+  show(header(),
+    el('h1', { text: 'Time for a break' }),
+    el('div', { class: 'card facts' },
+      fact(String(state.session.size), state.session.size === 1 ? 'line recorded this session' : 'lines recorded this session'),
+      fact(`${done} of ${all.length}`, 'recorded in total'),
+      unsent() ? fact(String(unsent()), 'not sent yet') : null),
+    el('p', { text: 'Everything is saved on this device. To carry on later, open the same link (or this page) in the same browser '
+      + 'and tap Continue: it opens where you stopped.' }),
+    el('p', { class: 'muted', text: 'You can send what you have now, or send it all at the end. Each time, only the new recordings are sent.' }),
+    el('div', { class: 'actions' }, sendButtons(), el('button', { class: 'quiet', text: 'Back to the list', onclick: showList })));
+}
 
 // ---------- recording ----------
 
@@ -616,27 +731,10 @@ const recorder = {
     const all = new Float32Array(length);
     let at = 0;
     for (const c of this.chunks) { all.set(c, at); at += c.length; }
-    let samples = all.subarray(Math.min(all.length, Math.round(SKIP_START * rate)));
-    let outRate = rate;
-    if (rate >= 44100) {                               // halve: 22.05 / 24 kHz is plenty for speech
-      const half = new Float32Array(samples.length >> 1);
-      for (let i = 0; i < half.length; i++) half[i] = (samples[2 * i] + samples[2 * i + 1]) / 2;
-      samples = half;
-      outRate = rate / 2;
-    }
-    let peak = 0;
-    for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
-    return { wav: wavBytes(samples, outRate), seconds: samples.length / outRate, peak };
+    const { samples, rate: outRate } = downsample(all.subarray(Math.min(all.length, Math.round(SKIP_START * rate))), rate);
+    return { wav: wavBytes(samples, outRate), seconds: samples.length / outRate, peak: peakOf(samples) };
   },
 };
-
-function verdict(take) {
-  if (take.seconds < 0.3) return { ok: false, silent: true, text: 'That was very short. Tap, say the line, then tap again.' };
-  if (take.peak < 0.02) return { ok: false, silent: true, text: 'I couldn’t hear anything. Is the microphone covered, or muted?' };
-  if (take.peak < 0.08) return { ok: false, text: 'Quite quiet. Come a little closer, or speak up a little.' };
-  if (take.peak > 0.99) return { ok: false, text: 'A bit loud: it may crackle. Hold the phone a little further away.' };
-  return { ok: true };
-}
 
 function micError(e) {
   if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) {
@@ -644,21 +742,6 @@ function micError(e) {
   }
   if (e && e.name === 'NotFoundError') return 'No microphone was found on this device.';
   return 'The microphone didn’t start. Close other apps that use it, reload the page and try again.';
-}
-
-function wavBytes(samples, rate) {
-  const buf = new ArrayBuffer(44 + samples.length * 2);
-  const v = new DataView(buf);
-  const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-  str(0, 'RIFF'); v.setUint32(4, 36 + samples.length * 2, true); str(8, 'WAVE');
-  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-  str(36, 'data'); v.setUint32(40, samples.length * 2, true);
-  for (let i = 0; i < samples.length; i++) {
-    const x = Math.max(-1, Math.min(1, samples[i]));
-    v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true);
-  }
-  return buf;
 }
 
 let player = null;
@@ -675,117 +758,117 @@ function stopPlayback() {
 
 // ---------- sending (one zip) ----------
 
-const CRC = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(bytes) {
-  let c = 0xffffffff;
-  for (let i = 0; i < bytes.length; i++) c = CRC[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-}
+const maxFile = () => Number(localStorage.getItem('hichgah-voice-test-max-file')) || 15 * 1048576;   // per zip: fits email and messaging apps (tests lower it)
 
-function zip(files) {     // [{name, data: Uint8Array}] -> Blob; stored (WAV barely compresses)
-  const now = new Date();
-  const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
-  const date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
-  const parts = [];
-  const central = [];
-  let offset = 0;
-  for (const f of files) {
-    const name = enc(f.name);
-    const crc = crc32(f.data);
-    const head = new DataView(new ArrayBuffer(30));
-    head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
-    head.setUint16(8, 0, true); head.setUint16(10, time, true); head.setUint16(12, date, true);
-    head.setUint32(14, crc, true); head.setUint32(18, f.data.length, true); head.setUint32(22, f.data.length, true);
-    head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
-    parts.push(head, name, f.data);
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true);
-    cd.setUint16(10, 0, true); cd.setUint16(12, time, true); cd.setUint16(14, date, true); cd.setUint32(16, crc, true);
-    cd.setUint32(20, f.data.length, true); cd.setUint32(24, f.data.length, true); cd.setUint16(28, name.length, true);
-    cd.setUint32(42, offset, true);
-    central.push(cd, name);
-    offset += 30 + name.length + f.data.length;
-  }
-  const size = central.reduce((n, p) => n + p.byteLength, 0);
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
-  end.setUint32(12, size, true); end.setUint32(16, offset, true);
-  return new Blob([...parts, ...central, end], { type: 'application/zip' });
-}
-
-const safe = (s) => s.replace(/[^\p{L}\p{N}._-]+/gu, '_');
-
-async function buildZip() {
-  const files = [];
-  const clips = [];
+// One or more zips of the recordings (mode 'new': only those not sent yet; 'all': everything), each with its own
+// recordings.json, so each file imports on its own. Notes go in the first.
+async function buildZips(mode) {
+  const items = [];
   const notes = [];
   for (const [s, line] of allLines()) {
     const k = keyOf(s, line);
     const meta = state.meta.get(k);
-    if (meta) {
-      const wav = await dbGet('clips', k);
-      if (wav) {
-        const file = `${safe(s.app)}/${safe(line.lang)}/${safe(line.id)}.wav`;
-        files.push({ name: file, data: new Uint8Array(wav) });
-        clips.push({ app: s.app, lang: line.lang, id: line.id, text: meta.text, file, recordedAt: meta.at, seconds: meta.seconds });
-      }
-    }
+    if (meta && (mode === 'all' || isNew(meta))) items.push({ s, line, k, meta });
     const n = state.notes.get(k);
     if (n) notes.push({ app: s.app, lang: line.lang, id: line.id, text: line.text, note: n.note });
   }
-  const manifest = {
-    format: 'hichgah-voice-recordings/1', exported: new Date().toISOString(),
-    person: state.pack.person || '', packMade: state.pack.made, clips, notes,
-  };
-  files.unshift({ name: 'recordings.json', data: enc(JSON.stringify(manifest, null, 1)) });
-  const day = new Date().toISOString().slice(0, 10);
   const apps = [...new Set(state.pack.scripts.map((s) => s.app))].join('-');
-  const name = `${apps}-voice${state.pack.person ? '-' + safe(state.pack.person) : ''}-${day}.zip`;
-  return { blob: zip(files), name, clips: clips.length, notes: notes.length };
+  const base = `${apps}-voice${state.pack.person ? '-' + safe(state.pack.person) : ''}-${stamp()}`;   // local date and time: sorts in order
+  const loaded = [];
+  for (const it of items) {
+    const wav = await dbGet('clips', it.k);
+    if (wav) loaded.push({ ...it, wav });
+  }
+  const batches = batchBySize(loaded, (it) => it.wav.byteLength, maxFile());
+  if (!batches.length) batches.push([]);   // notes only
+  // Each send gets the next number (kept per pack), so files never share a name: …-send3.zip, …-send4-1of2.zip.
+  const counter = `hichgah-voice-sends-${state.pack.made}-${state.pack.person}`;
+  const send = Number(localStorage.getItem(counter) || 0) + 1;
+  localStorage.setItem(counter, String(send));
+  return batches.map((batch, i) => {
+    const files = [];
+    const clips = batch.map(({ s, line, meta, wav }) => {
+      const file = `${safe(s.app)}/${safe(line.lang)}/${safe(line.id)}.wav`;
+      files.push({ name: file, data: new Uint8Array(wav) });
+      return { app: s.app, lang: line.lang, id: line.id, text: meta.text, file, recordedAt: meta.at, seconds: meta.seconds };
+    });
+    const manifest = {
+      format: 'hichgah-voice-recordings/1', exported: new Date().toISOString(),
+      person: state.pack.person || '', packMade: state.pack.made, send,
+      part: batches.length > 1 ? `${i + 1} of ${batches.length}` : '', clips, notes: i === 0 ? notes : [],
+    };
+    files.unshift({ name: 'recordings.json', data: enc(JSON.stringify(manifest, null, 1)) });
+    const name = `${base}-send${send}${batches.length > 1 ? `-${i + 1}of${batches.length}` : ''}.zip`;
+    return { file: new File([zip(files)], name, { type: 'application/zip' }), keys: batch.map((b) => b.k), clips: clips.length };
+  });
 }
 
-function download(blob, name) {
-  const a = el('a', { href: URL.createObjectURL(blob), download: name });
+// Notes written or changed since the last send (all notes go with every send; this only enables the button).
+const freshNotes = () => [...state.notes.values()].filter((n) => !lastSent() || n.at > lastSent()).length;
+const sentKey = () => `hichgah-voice-last-sent-${state.pack.made}-${state.pack.person}`;
+const lastSent = () => localStorage.getItem(sentKey());
+
+async function markSent(keys) {
+  localStorage.setItem(sentKey(), new Date().toISOString());
+  const now = new Date().toISOString();
+  for (const k of keys) {
+    const m = state.meta.get(k);
+    if (!m) continue;
+    m.sentAt = now;
+    await dbPut('meta', k, m);
+  }
+}
+
+function download(file) {
+  const a = el('a', { href: URL.createObjectURL(file), download: file.name });
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 60000);
 }
 
-async function showSend() {
+async function showSend(mode) {
+  releaseWake();
+  go('list', true);
   show(header(), el('h1', { text: 'Send recordings' }), el('p', {}, el('span', { class: 'busy' }), ' Packing your recordings…'));
-  const { blob, name, clips, notes } = await buildZip();
-  const file = new File([blob], name, { type: 'application/zip' });
-  const canShare = navigator.canShare && navigator.canShare({ files: [file] });
-  const mb = (blob.size / 1048576).toFixed(1);
+  const zips = await buildZips(mode);
+  const files = zips.map((z) => z.file);
+  const total = zips.reduce((n, z) => n + z.clips, 0);
+  const notes = state.notes.size;
+  const canShare = navigator.canShare && navigator.canShare({ files });
+  const mb = (files.reduce((n, f) => n + f.size, 0) / 1048576).toFixed(1);
   const status = el('p', { class: 'status', role: 'status' });
+  const sent = async (keys, text) => {
+    await markSent(keys);
+    status.className = 'status good';
+    status.textContent = text;
+  };
+  const many = files.length > 1;
   show(header(),
-    el('h1', { text: 'Send recordings' }),
+    el('h1', { text: mode === 'all' ? 'Send everything again' : 'Send new recordings' }),
     el('div', { class: 'card' },
-      el('p', {}, el('b', { text: `${clips} recording${clips === 1 ? '' : 's'}` }),
-        notes ? ` and ${notes} note${notes === 1 ? '' : 's'}` : '', ` in one file (${mb} MB):`),
-      el('p', { class: 'small muted', dir: 'ltr', text: name }),
+      el('p', {}, el('b', { text: `${total} recording${total === 1 ? '' : 's'}` }),
+        notes ? ` and ${notes} note${notes === 1 ? '' : 's'}` : '',
+        many ? ` in ${files.length} files (${mb} MB in all, at most 15 MB each):` : ` in one file (${mb} MB):`),
+      el('ul', { class: 'files small muted' }, files.map((f) => el('li', { dir: 'ltr', text: f.name }))),
       el('div', { class: 'actions' },
-        canShare ? el('button', { class: 'send', text: 'Share the file…', onclick: async () => {
-          try { await navigator.share({ files: [file], title: name }); status.textContent = 'Sent. Thank you!'; status.className = 'status good'; }
-          catch (e) { if (e.name !== 'AbortError') { download(blob, name); status.textContent = 'Saved to your downloads instead.'; } }
+        canShare ? el('button', { class: 'send', text: many ? `Share the ${files.length} files…` : 'Share the file…', onclick: async () => {
+          try {
+            await navigator.share({ files, title: files[0].name });
+            await sent(zips.flatMap((z) => z.keys), 'Sent. Thank you!');
+          } catch (e) {
+            if (e.name !== 'AbortError') { status.className = 'status warn'; status.textContent = 'Sharing didn’t work here: save the file instead.'; }
+          }
         } }) : null,
-        el('button', { class: canShare ? 'quiet' : 'send', text: 'Save the file', onclick: () => {
-          download(blob, name);
-          status.textContent = 'Saved. Now attach it to a message (WhatsApp as a document, Telegram, email or Drive).';
-          status.className = 'status good';
-        } })),
+        zips.map((z, i) => el('button', { class: canShare || i > 0 ? 'quiet' : 'send',
+          text: many ? `Save file ${i + 1} of ${files.length}` : 'Save the file', onclick: async (e) => {
+            download(z.file);
+            e.currentTarget.textContent = many ? `Saved file ${i + 1} ✓` : 'Saved ✓';
+            await sent(z.keys, 'Saved. Now attach it to a message (WhatsApp as a document, Telegram, email or Drive).');
+          } }))),
       status),
-    el('p', { class: 'muted', text: 'Send it to the person who gave you the password. Your recordings stay here too: '
-      + 'you can keep recording and send again later (each file has everything so far).' }),
+    el('p', { class: 'muted', text: `Send ${many ? 'them' : 'it'} to the person who gave you the password. Your recordings stay here too. `
+      + 'Next time, only what you record after this is sent (“Send everything again” is on the list if a file gets lost).' }),
     el('button', { class: 'link', text: '‹ Back to the list', onclick: showList }));
 }
 
