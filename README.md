@@ -17,6 +17,7 @@ kalamak/                   Kalamak, the initiative's first app (Flutter); page, 
 <game>/media/              icon (256px), 4 screenshots (540x960 JPEG), gameplay.mp4 + poster.jpg
 <game>/privacy/index.html  its privacy policy   → https://hichgahgame.github.io/<game>/privacy/
 tools/frames-to-mp4.swift  turns a folder of PNG frames into the gameplay MP4 (macOS, nothing to install)
+voice/                     private voice-recording page (password, encrypted packs, noindex); voice/tools/README.md
 ```
 
 Gameplay videos are rendered frame by frame by each game's capture test (Cookie:
